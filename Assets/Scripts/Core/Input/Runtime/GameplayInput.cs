@@ -9,7 +9,7 @@ namespace Core.Input.Runtime
         public IInputAction<Vector2> Look { get; }
         public IInputAction<bool> Attack { get; }
         public IInputAction<bool> Interact { get; }
-        public IInputAction<bool> Sprint { get; }
+        public IInputAction<bool> Dash { get; }
         public IInputAction<bool> Jump { get; }
         public IInputAction<bool> Crouch { get; }
 
@@ -35,14 +35,14 @@ namespace Core.Input.Runtime
                 () => actions.Interact.WasPressedThisFrame(),
                 context => context.ReadValueAsButton());
 
-            Sprint = new UnityInputAction<bool>(
+            Dash = new UnityInputAction<bool>(
                 actions.Sprint,
-                () => actions.Sprint.WasPressedThisFrame(),
+                () => actions.Jump.IsPressed(),
                 context => context.ReadValueAsButton());
             
             Jump = new UnityInputAction<bool>(
                 actions.Jump,
-                () => actions.Jump.WasPressedThisFrame(),
+                () => actions.Jump.IsPressed(),
                 context => context.ReadValueAsButton());
             
             Crouch = new UnityInputAction<bool>(
@@ -57,7 +57,9 @@ namespace Core.Input.Runtime
             Look.SetActive(active);
             Attack.SetActive(active);
             Interact.SetActive(active);
-            Sprint.SetActive(active);
+            Dash.SetActive(active);
+            Jump.SetActive(active);
+            Crouch.SetActive(active);
         }
     }
 }

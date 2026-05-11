@@ -58,6 +58,8 @@ namespace Core.Audio.Configs
         [Header("Player")]
         [field: SerializeField] public SoundConfig PlayerJump { get; private set; }
         [field: SerializeField] public SoundConfig PlayerLand { get; private set; }
+        [field: SerializeField] public SoundConfig PlayerDash { get; private set; }
+        [field: SerializeField] public SoundConfig PlayerFootstep { get; private set; }
         [field: SerializeField] public SoundConfig PlayerHit { get; private set; }
 
         [Header("Items")]

@@ -4,6 +4,7 @@ using Core.AppStates.Contracts.State;
 using Core.AppStates.Data;
 using Features.Bootstrap;
 using Features.Gameplay;
+using Features.Gameplay.Infrastructure;
 using Features.MainMenu;
 using VContainer;
 

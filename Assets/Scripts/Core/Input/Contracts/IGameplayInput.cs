@@ -8,7 +8,7 @@ namespace Core.Input.Contracts
         IInputAction<Vector2> Look { get; }
         IInputAction<bool> Attack { get; }
         IInputAction<bool> Interact { get; }
-        IInputAction<bool> Sprint { get; }
+        IInputAction<bool> Dash { get; }
         IInputAction<bool> Jump { get; }
         IInputAction<bool> Crouch { get; }
         void SetActive(bool active);

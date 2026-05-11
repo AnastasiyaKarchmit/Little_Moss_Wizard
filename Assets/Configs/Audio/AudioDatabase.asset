@@ -23,13 +23,15 @@ MonoBehaviour:
     <PopupClose>k__BackingField: {fileID: 0}
   music:
     <MainMenu>k__BackingField: {fileID: 11400000, guid: 9c66ac8a96d811c478b8e0d9ef0043f7, type: 2}
-    <Gameplay>k__BackingField: {fileID: 0}
+    <Gameplay>k__BackingField: {fileID: 11400000, guid: 539d4d4e65e22a344bd6442ab7dd1e1d, type: 2}
     <Loading>k__BackingField: {fileID: 0}
     <Victory>k__BackingField: {fileID: 0}
     <Defeat>k__BackingField: {fileID: 0}
   gameplay:
-    <PlayerJump>k__BackingField: {fileID: 0}
-    <PlayerLand>k__BackingField: {fileID: 0}
+    <PlayerJump>k__BackingField: {fileID: 11400000, guid: f71454314eb9d8246b78dfdbbe345f2a, type: 2}
+    <PlayerLand>k__BackingField: {fileID: 11400000, guid: 13595d1d64850744fb61b761b88df12f, type: 2}
+    <PlayerDash>k__BackingField: {fileID: 11400000, guid: 38bcee12e2d7055449dbaf446a8c6f93, type: 2}
+    <PlayerFootstep>k__BackingField: {fileID: 11400000, guid: 14dc901bcb3107e41adaa90093488c4a, type: 2}
     <PlayerHit>k__BackingField: {fileID: 0}
     <PickupItem>k__BackingField: {fileID: 0}
     <DropItem>k__BackingField: {fileID: 0}

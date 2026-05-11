@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da9aa952fb274f6a8b0aa7313ab46dd5, type: 3}
+  m_Name: RunSoundConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Core.Audio.Configs.SoundConfig
+  clips:
+  - {fileID: 8300000, guid: 7c61f28faa866c34e94740bf9b0167c8, type: 3}
+  - {fileID: 8300000, guid: 39d1250fa4dab8c469cfb44943acd0fe, type: 3}
+  - {fileID: 8300000, guid: f15ce6f33119c42419bb3bd47d8c8254, type: 3}
+  - {fileID: 8300000, guid: 2b788a584bccc4b478457e2466bc2afd, type: 3}
+  - {fileID: 8300000, guid: c68a7fddb02fb1845bb4710d3b826ae1, type: 3}
+  - {fileID: 8300000, guid: 7d10de767d00bdc48b295911834019f4, type: 3}
+  settings:
+    OutputMixerGroup: {fileID: 7184877114515420266, guid: be8904350b9f4e4298ccc74139557a52, type: 2}
+    Mute: 0
+    BypassEffects: 0
+    BypassListenerEffects: 0
+    BypassReverbZones: 0
+    Loop: 0
+    Priority: 128
+    Volume: 0.5
+    Pitch: 1
+    StereoPan: 0
+    SpatialBlend: 0
+    ReverbZoneMix: 1
+    DopplerLevel: 1
+    Spread: 0
+    RolloffMode: 0
+    MinDistance: 1
+    MaxDistance: 500
+  pitchShift: 0.1
+  volumeShift: 0.15
