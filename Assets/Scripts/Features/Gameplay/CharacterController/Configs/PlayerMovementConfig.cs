@@ -43,19 +43,45 @@ namespace Features.Gameplay.CharacterController.Configs
         [Tooltip("Distance used for ground and ceiling checks.")]
         [Range(0.01f, 0.5f)] public float GroundCheckDistance = 0.05f;
 
-        [Header("Jump")]
-        [Tooltip("Initial upward velocity applied when jumping.")]
-        [Min(0f)] public float JumpPower = 24f;
+        [Header("Jump Shape")]
+        [Tooltip("Desired full jump height in Unity units.")]
+        [Min(0.1f)] public float JumpHeight = 4.75f;
+
+        [Tooltip("Time in seconds until the player reaches the top of the jump.")]
+        [Range(0.1f, 1f)] public float TimeToJumpApex = 0.42f;
+
+        [Tooltip("Small compensation because collision and fixed timestep can slightly reduce real jump height.")]
+        [Range(1f, 1.2f)] public float JumpHeightCompensationFactor = 1.04f;
 
         [Tooltip("Maximum falling speed.")]
-        [Min(0f)] public float MaxFallSpeed = 32f;
+        [Min(0f)] public float MaxFallSpeed = 28f;
+        
+        [Header("Jump Start Feel")]
+        [Tooltip("If enabled, jump starts with partial velocity and receives the rest while jump is held.")]
+        public bool UseRampedJumpStart = true;
 
-        [Tooltip("How quickly the player accelerates downward.")]
-        [Min(0f)] public float FallAcceleration = 85f;
+        [Tooltip("How much of the calculated jump velocity is applied immediately.")]
+        [Range(0.1f, 1f)]
+        public float JumpStartVelocityMultiplier = 0.65f;
 
-        [Tooltip("Extra gravity when the player releases jump early.")]
-        [Min(1f)] public float JumpEndEarlyGravityModifier = 3f;
+        [Tooltip("How long the controller can add extra upward force after jump start.")]
+        [Range(0.01f, 0.25f)]
+        public float JumpSustainTime = 0.12f;
 
+        [Header("Variable Jump Height")]
+        [Tooltip("When jump is released early, upward velocity is multiplied by this value.")]
+        [Range(0.1f, 1f)] public float JumpCutVelocityMultiplier = 0.45f;
+
+        [Tooltip("Extra gravity while moving upward after jump was released.")]
+        [Range(1f, 8f)] public float GravityOnReleaseMultiplier = 2.2f;
+
+        [Tooltip("Extra gravity when falling. Makes the jump less floaty on the way down.")]
+        [Range(1f, 8f)] public float FallGravityMultiplier = 1.35f;
+
+        [Tooltip("Prevents accidental instant jump cut on the same physics tick as jump start.")]
+        [Range(0f, 0.1f)] public float MinJumpCutTime = 0.035f;
+
+        [Header("Jump Forgiveness")]
         [Tooltip("Allows jumping shortly after leaving a platform.")]
         [Min(0f)] public float CoyoteTime = 0.12f;
 
@@ -86,12 +112,52 @@ namespace Features.Gameplay.CharacterController.Configs
         [Tooltip("How much horizontal speed remains after dash ends.")]
         [Range(0f, 1f)] public float DashEndSpeedMultiplier = 0.55f;
 
+        public float Gravity { get; private set; }
+        public float InitialJumpVelocity { get; private set; }
+        public float JumpStartVelocity { get; private set; }
+        public float JumpSustainAcceleration { get; private set; }
+        public float AdjustedJumpHeight { get; private set; }
+
+        private void OnEnable()
+        {
+            CalculateJumpValues();
+        }
+
 #if UNITY_EDITOR
         private void OnValidate()
         {
-            JumpEndEarlyGravityModifier = Mathf.Max(1f, JumpEndEarlyGravityModifier);
+            TimeToJumpApex = Mathf.Max(0.1f, TimeToJumpApex);
+            JumpHeight = Mathf.Max(0.1f, JumpHeight);
+            JumpHeightCompensationFactor = Mathf.Max(1f, JumpHeightCompensationFactor);
+            JumpSustainTime = Mathf.Max(0.01f, JumpSustainTime);
+
             DashDuration = Mathf.Max(0.01f, DashDuration);
+
+            CalculateJumpValues();
         }
 #endif
+
+        private void CalculateJumpValues()
+        {
+            AdjustedJumpHeight = JumpHeight * JumpHeightCompensationFactor;
+
+            Gravity = -(2f * AdjustedJumpHeight) / Mathf.Pow(TimeToJumpApex, 2f);
+            InitialJumpVelocity = Mathf.Abs(Gravity) * TimeToJumpApex;
+
+            JumpStartVelocity = InitialJumpVelocity * JumpStartVelocityMultiplier;
+
+            if (JumpSustainTime > 0f)
+            {
+                float missingVelocity = InitialJumpVelocity - JumpStartVelocity;
+
+                // Add Mathf.Abs(Gravity) so the sustain force can fight gravity too.
+                JumpSustainAcceleration =
+                    missingVelocity / JumpSustainTime + Mathf.Abs(Gravity);
+            }
+            else
+            {
+                JumpSustainAcceleration = 0f;
+            }
+        }
     }
 }

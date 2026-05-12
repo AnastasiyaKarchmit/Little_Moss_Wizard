@@ -34,6 +34,7 @@ namespace Features.Gameplay.CharacterController.Runtime
         private bool _endedJumpEarly;
 
         private bool _jumpBuffered;
+        private float _jumpStartedTime = float.NegativeInfinity;
         private float _lastJumpPressedTime = float.NegativeInfinity;
         private float _lastLeftGroundedTime = float.NegativeInfinity;
 
@@ -281,13 +282,8 @@ namespace Features.Gameplay.CharacterController.Runtime
 
         private void HandleJump()
         {
-            if (!_grounded &&
-                !_endedJumpEarly &&
-                !_input.JumpHeld &&
-                _velocity.y > 0f)
-            {
-                _endedJumpEarly = true;
-            }
+            HandleJumpCut();
+            HandleJumpSustain();
 
             if (!HasBufferedJump)
             {
@@ -300,6 +296,54 @@ namespace Features.Gameplay.CharacterController.Runtime
             if (_grounded || CanUseCoyote)
                 ExecuteJump();
         }
+        
+        private void HandleJumpSustain()
+        {
+            if (!config.UseRampedJumpStart)
+                return;
+
+            if (_grounded)
+                return;
+
+            if (_endedJumpEarly)
+                return;
+
+            if (!_input.JumpHeld)
+                return;
+
+            if (_velocity.y <= 0f)
+                return;
+
+            if (_time > _jumpStartedTime + config.JumpSustainTime)
+                return;
+
+            _velocity.y += config.JumpSustainAcceleration * Time.fixedDeltaTime;
+
+            if (_velocity.y > config.InitialJumpVelocity)
+                _velocity.y = config.InitialJumpVelocity;
+        }
+        
+        private void HandleJumpCut()
+        {
+            if (_grounded)
+                return;
+
+            if (_endedJumpEarly)
+                return;
+
+            if (_input.JumpHeld)
+                return;
+
+            if (_velocity.y <= 0f)
+                return;
+
+            if (_time < _jumpStartedTime + config.MinJumpCutTime)
+                return;
+
+            _endedJumpEarly = true;
+
+            _velocity.y *= config.JumpCutVelocityMultiplier;
+        }
 
         private void ExecuteJump()
         {
@@ -309,8 +353,11 @@ namespace Features.Gameplay.CharacterController.Runtime
             _lastLeftGroundedTime = float.NegativeInfinity;
 
             _endedJumpEarly = false;
+            _jumpStartedTime = _time;
 
-            _velocity.y = config.JumpPower;
+            _velocity.y = config.UseRampedJumpStart
+                ? config.JumpStartVelocity
+                : config.InitialJumpVelocity;
 
             Jumped?.Invoke();
         }
@@ -355,15 +402,21 @@ namespace Features.Gameplay.CharacterController.Runtime
                 return;
             }
 
-            float fallAcceleration = config.FallAcceleration;
+            float gravity = config.Gravity;
 
-            if (_endedJumpEarly && _velocity.y > 0f)
-                fallAcceleration *= config.JumpEndEarlyGravityModifier;
+            if (_velocity.y < 0f)
+            {
+                gravity *= config.FallGravityMultiplier;
+            }
+            else if (_endedJumpEarly && _velocity.y > 0f)
+            {
+                gravity *= config.GravityOnReleaseMultiplier;
+            }
 
-            _velocity.y = Mathf.MoveTowards(
-                _velocity.y,
-                -config.MaxFallSpeed,
-                fallAcceleration * Time.fixedDeltaTime);
+            _velocity.y += gravity * Time.fixedDeltaTime;
+
+            if (_velocity.y < -config.MaxFallSpeed)
+                _velocity.y = -config.MaxFallSpeed;
         }
 
         // --------------------------------------------------------------------

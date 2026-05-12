@@ -82,6 +82,9 @@ namespace Core.Audio.Runtime
 
         public async UniTask StopAsync(CancellationToken token)
         {
+            if (_source == null)
+                return;
+            
             if (_isDisposed || !_source.isPlaying)
                 return;
 
