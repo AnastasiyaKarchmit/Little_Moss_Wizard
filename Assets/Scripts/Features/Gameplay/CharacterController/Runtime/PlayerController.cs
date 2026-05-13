@@ -9,17 +9,37 @@ namespace Features.Gameplay.CharacterController.Runtime
         [SerializeField] private PlayerMovementController2D movement;
         [SerializeField] private PlayerMovementAnimator2D movementAnimator;
         [SerializeField] private PlayerAudioController2D audioController;
+        
+        [Header("Health")]
+        [SerializeField] private PlayerHealth health;
+        [SerializeField] private PlayerDamageReceiver2D damageReceiver;
 
-        // [Header("Gameplay")]
-        // [SerializeField] private PlayerCollisionController2D collisionController;
+        [Header("Gameplay")]
+        [SerializeField] private PlayerCollisionController2D collisionController;
 
         public PlayerMovementController2D Movement => movement;
+        public PlayerHealth Health => health;
 
         private bool _isGameplayActive = true;
 
         private void Awake()
         {
             ResolveReferences();
+
+            if (health != null)
+            {
+                health.Died += OnDied;
+                health.Damaged += OnDamaged;
+            }
+        }
+        
+        private void OnDestroy()
+        {
+            if (health != null)
+            {
+                health.Died -= OnDied;
+                health.Damaged -= OnDamaged;
+            }
         }
 
         public void SetGameplayActive(bool active)
@@ -63,8 +83,24 @@ namespace Features.Gameplay.CharacterController.Runtime
             if (audioController == null)
                 audioController = GetComponentInChildren<PlayerAudioController2D>();
 
-            // if (collisionController == null)
-            //     collisionController = GetComponentInChildren<PlayerCollisionController2D>();
+            if (collisionController == null)
+                collisionController = GetComponentInChildren<PlayerCollisionController2D>();
+        }
+        
+        private void OnDamaged(int damageAmount)
+        {
+            if (audioController != null)
+                audioController.PlayHit();
+        }
+        
+        private void OnDied()
+        {
+            DisableGameplay();
+
+            // Later:
+            // play death animation
+            // show respawn screen
+            // notify gameplay state
         }
 
 #if UNITY_EDITOR

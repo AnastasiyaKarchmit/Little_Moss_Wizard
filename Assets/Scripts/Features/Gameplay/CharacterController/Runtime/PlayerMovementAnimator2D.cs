@@ -1,19 +1,17 @@
+using Features.Gameplay.CharacterController.Configs;
 using UnityEngine;
+using VContainer;
 
 namespace Features.Gameplay.CharacterController.Runtime
 {
     [DisallowMultipleComponent]
     public sealed class PlayerMovementAnimator2D : MonoBehaviour
     {
-        [Header("References")]
-        [SerializeField] private PlayerMovementController2D movement;
+        [Header("References")] 
+        
         [SerializeField] private Animator animator;
         [SerializeField] private SpriteRenderer spriteRenderer;
-
-        [Header("Movement Blend")]
-        [Tooltip("Horizontal speed that should be treated as full run animation speed.")]
-        [SerializeField, Min(0.01f)] private float fullRunSpeed = 10f;
-
+        
         [Tooltip("Smoothing time for the Velocity blend tree parameter.")]
         [SerializeField, Min(0f)] private float velocityDampTime = 0.08f;
 
@@ -31,7 +29,17 @@ namespace Features.Gameplay.CharacterController.Runtime
         private static readonly int JumpKey = Animator.StringToHash("Jump");
         private static readonly int DashKey = Animator.StringToHash("Dash");
         private static readonly int LandKey = Animator.StringToHash("Land");
+        
+        private PlayerMovementController2D _movement;
+        private float _fullRunSpeed = 10f;
 
+        [Inject]
+        public void Construct(PlayerMovementController2D movementController, PlayerMovementConfig config)
+        {
+            _movement = movementController;
+            _fullRunSpeed = config.MaxSpeed;
+        }
+        
         private void Awake()
         {
             ResolveReferences();
@@ -39,30 +47,30 @@ namespace Features.Gameplay.CharacterController.Runtime
 
         private void OnEnable()
         {
-            if (movement == null)
+            if (_movement == null)
                 ResolveReferences();
 
-            if (movement == null)
+            if (_movement == null)
                 return;
 
-            movement.Jumped += OnJumped;
-            movement.Dashed += OnDashed;
-            movement.GroundedChanged += OnGroundedChanged;
+            _movement.Jumped += OnJumped;
+            _movement.Dashed += OnDashed;
+            _movement.GroundedChanged += OnGroundedChanged;
         }
 
         private void OnDisable()
         {
-            if (movement == null)
+            if (_movement == null)
                 return;
 
-            movement.Jumped -= OnJumped;
-            movement.Dashed -= OnDashed;
-            movement.GroundedChanged -= OnGroundedChanged;
+            _movement.Jumped -= OnJumped;
+            _movement.Dashed -= OnDashed;
+            _movement.GroundedChanged -= OnGroundedChanged;
         }
 
         private void Update()
         {
-            if (movement == null || animator == null)
+            if (_movement == null || animator == null)
                 return;
 
             UpdateMovementParameters();
@@ -71,14 +79,14 @@ namespace Features.Gameplay.CharacterController.Runtime
 
         private void UpdateMovementParameters()
         {
-            Vector2 velocity = movement.Velocity;
+            Vector2 velocity = _movement.Velocity;
 
             float horizontalSpeed = Mathf.Abs(velocity.x);
 
             if (horizontalSpeed < idleVelocityThreshold)
                 horizontalSpeed = 0f;
 
-            float normalizedVelocity = Mathf.Clamp01(horizontalSpeed / fullRunSpeed);
+            float normalizedVelocity = Mathf.Clamp01(horizontalSpeed / _fullRunSpeed);
 
             animator.SetFloat(
                 VelocityKey,
@@ -87,8 +95,8 @@ namespace Features.Gameplay.CharacterController.Runtime
                 Time.deltaTime);
 
             animator.SetFloat(VerticalVelocityKey, velocity.y);
-            animator.SetBool(GroundedKey, movement.Grounded);
-            animator.SetBool(DashingKey, movement.IsDashing);
+            animator.SetBool(GroundedKey, _movement.Grounded);
+            animator.SetBool(DashingKey, _movement.IsDashing);
         }
 
         private void UpdateSpriteDirection()
@@ -96,7 +104,7 @@ namespace Features.Gameplay.CharacterController.Runtime
             if (!flipSprite || spriteRenderer == null)
                 return;
 
-            float inputX = movement.FrameInput.x;
+            float inputX = _movement.FrameInput.x;
 
             if (Mathf.Abs(inputX) <= 0.01f)
                 return;
@@ -137,8 +145,8 @@ namespace Features.Gameplay.CharacterController.Runtime
 
         private void ResolveReferences()
         {
-            if (movement == null)
-                movement = GetComponentInParent<PlayerMovementController2D>();
+            if (_movement == null)
+                _movement = GetComponentInParent<PlayerMovementController2D>();
 
             if (animator == null)
                 animator = GetComponentInChildren<Animator>();

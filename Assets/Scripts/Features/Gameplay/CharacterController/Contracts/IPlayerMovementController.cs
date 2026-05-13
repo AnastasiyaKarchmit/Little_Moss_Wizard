@@ -20,5 +20,9 @@ namespace Features.Gameplay.CharacterController.Contracts
         int FacingDirection { get; }
 
         void SetActive(bool active);
+        
+        void AddExternalVelocity(Vector2 velocity);
+        void SetExternalVelocity(Vector2 velocity);
+        void ClearExternalVelocity();
     }
 }

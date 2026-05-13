@@ -20,12 +20,14 @@ namespace Features.MainMenu.States.MainMenuState
 
         private readonly ReactiveCommand<Unit> _playCommand = new();
         private readonly ReactiveCommand<Unit> _settingsCommand = new();
+        private readonly ReactiveCommand<Unit> _quitCommand = new();
         private readonly CompositeDisposable _disposables = new();
 
         private MainMenuView _view;
 
         public Observable<Unit> PlayRequested => _playCommand;
         public Observable<Unit> SettingsRequested => _settingsCommand;
+        public Observable<Unit> QuitRequested => _quitCommand;
 
         public MainMenuPresenter(
             MainMenuModel model,
@@ -78,12 +80,17 @@ namespace Features.MainMenu.States.MainMenuState
             _settingsCommand
                 .Subscribe(_ => _uiSoundPlayer.PlayButtonClick())
                 .AddTo(_disposables);
+            
+            _quitCommand
+                .Subscribe(_ => _uiSoundPlayer.PlayButtonClick())
+                .AddTo(_disposables);
         }
         
         public void Dispose()
         {
             _playCommand.Dispose();
             _settingsCommand.Dispose();
+            _quitCommand.Dispose();
             _disposables.Dispose();
         }
     }

@@ -12,8 +12,7 @@ namespace Features.Gameplay.CharacterController.Runtime
     [RequireComponent(typeof(Collider2D))]
     public sealed class PlayerMovementController2D : MonoBehaviour, IPlayerMovementController
     {
-        [Header("Config")]
-        [SerializeField] private PlayerMovementConfig config;
+        private PlayerMovementConfig _config;
 
         private Rigidbody2D _rigidbody;
         private Collider2D _collider;
@@ -45,6 +44,8 @@ namespace Features.Gameplay.CharacterController.Runtime
         private float _lastDashStartedTime = float.NegativeInfinity;
         private float _lastDashPressedTime = float.NegativeInfinity;
         private int _airDashesUsed;
+        
+        private Vector2 _externalVelocity;
 
         public event Action<bool, float> GroundedChanged;
         public event Action Jumped;
@@ -62,26 +63,27 @@ namespace Features.Gameplay.CharacterController.Runtime
 
         private bool HasBufferedJump =>
             _jumpBuffered &&
-            _time <= _lastJumpPressedTime + config.JumpBuffer;
+            _time <= _lastJumpPressedTime + _config.JumpBuffer;
 
         private bool CanUseCoyote =>
             !_grounded &&
-            _time <= _lastLeftGroundedTime + config.CoyoteTime;
+            _time <= _lastLeftGroundedTime + _config.CoyoteTime;
 
         private bool HasBufferedDash =>
             _dashBuffered &&
-            _time <= _lastDashPressedTime + config.DashBuffer;
+            _time <= _lastDashPressedTime + _config.DashBuffer;
 
         [Inject]
-        public void Construct(IPlayerMovementInputSource inputSource)
+        public void Construct(IPlayerMovementInputSource inputSource, PlayerMovementConfig config)
         {
             _inputSource = inputSource;
+            _config = config;
         }
 
         private void Awake()
         {
             _rigidbody = GetComponent<Rigidbody2D>();
-            _collider = GetComponent<Collider2D>();
+            _collider = GetComponent<CapsuleCollider2D>();
 
             ConfigureRigidbody();
             BuildCollisionFilter();
@@ -91,7 +93,7 @@ namespace Features.Gameplay.CharacterController.Runtime
 
         private void Update()
         {
-            if (!_isActive || config == null)
+            if (!_isActive || _config == null)
                 return;
 
             _time += Time.deltaTime;
@@ -119,7 +121,7 @@ namespace Features.Gameplay.CharacterController.Runtime
 
         private void FixedUpdate()
         {
-            if (!_isActive || config == null)
+            if (!_isActive || _config == null)
                 return;
 
             _velocity = GetBodyVelocity();
@@ -154,6 +156,21 @@ namespace Features.Gameplay.CharacterController.Runtime
                 StopMovement();
             }
         }
+        
+        public void AddExternalVelocity(Vector2 velocity)
+        {
+            _externalVelocity += velocity;
+        }
+
+        public void SetExternalVelocity(Vector2 velocity)
+        {
+            _externalVelocity = velocity;
+        }
+
+        public void ClearExternalVelocity()
+        {
+            _externalVelocity = Vector2.zero;
+        }
 
         private void ResetRuntimeInput()
         {
@@ -164,6 +181,8 @@ namespace Features.Gameplay.CharacterController.Runtime
 
             _endedJumpEarly = false;
             _isDashing = false;
+
+            _externalVelocity = Vector2.zero;
 
             _lastJumpPressedTime = float.NegativeInfinity;
             _lastDashPressedTime = float.NegativeInfinity;
@@ -184,12 +203,12 @@ namespace Features.Gameplay.CharacterController.Runtime
 
         private void BuildCollisionFilter()
         {
-            if (config == null)
+            if (_config == null)
                 return;
 
-            LayerMask collisionMask = config.SolidLayers.value != 0
-                ? config.SolidLayers
-                : ~config.PlayerLayer;
+            LayerMask collisionMask = _config.SolidLayers.value != 0
+                ? _config.SolidLayers
+                : ~_config.PlayerLayer;
 
             _solidFilter = new ContactFilter2D();
             _solidFilter.SetLayerMask(collisionMask);
@@ -200,22 +219,22 @@ namespace Features.Gameplay.CharacterController.Runtime
         {
             Vector2 move = Vector2.ClampMagnitude(rawInput.Move, 1f);
 
-            if (config.SnapInput)
+            if (_config.SnapInput)
             {
-                move.x = Mathf.Abs(move.x) < config.HorizontalDeadZoneThreshold
+                move.x = Mathf.Abs(move.x) < _config.HorizontalDeadZoneThreshold
                     ? 0f
                     : Mathf.Sign(move.x);
 
-                move.y = Mathf.Abs(move.y) < config.VerticalDeadZoneThreshold
+                move.y = Mathf.Abs(move.y) < _config.VerticalDeadZoneThreshold
                     ? 0f
                     : Mathf.Sign(move.y);
             }
             else
             {
-                if (Mathf.Abs(move.x) < config.HorizontalDeadZoneThreshold)
+                if (Mathf.Abs(move.x) < _config.HorizontalDeadZoneThreshold)
                     move.x = 0f;
 
-                if (Mathf.Abs(move.y) < config.VerticalDeadZoneThreshold)
+                if (Mathf.Abs(move.y) < _config.VerticalDeadZoneThreshold)
                     move.y = 0f;
             }
 
@@ -234,8 +253,8 @@ namespace Features.Gameplay.CharacterController.Runtime
         {
             bool wasGrounded = _grounded;
 
-            bool groundHit = CastBody(Vector2.down, config.GroundCheckDistance);
-            bool ceilingHit = CastBody(Vector2.up, config.GroundCheckDistance);
+            bool groundHit = CastBody(Vector2.down, _config.GroundCheckDistance);
+            bool ceilingHit = CastBody(Vector2.up, _config.GroundCheckDistance);
 
             if (ceilingHit && _velocity.y > 0f)
                 _velocity.y = 0f;
@@ -287,7 +306,7 @@ namespace Features.Gameplay.CharacterController.Runtime
 
             if (!HasBufferedJump)
             {
-                if (_jumpBuffered && _time > _lastJumpPressedTime + config.JumpBuffer)
+                if (_jumpBuffered && _time > _lastJumpPressedTime + _config.JumpBuffer)
                     _jumpBuffered = false;
 
                 return;
@@ -299,7 +318,7 @@ namespace Features.Gameplay.CharacterController.Runtime
         
         private void HandleJumpSustain()
         {
-            if (!config.UseRampedJumpStart)
+            if (!_config.UseRampedJumpStart)
                 return;
 
             if (_grounded)
@@ -314,13 +333,13 @@ namespace Features.Gameplay.CharacterController.Runtime
             if (_velocity.y <= 0f)
                 return;
 
-            if (_time > _jumpStartedTime + config.JumpSustainTime)
+            if (_time > _jumpStartedTime + _config.JumpSustainTime)
                 return;
 
-            _velocity.y += config.JumpSustainAcceleration * Time.fixedDeltaTime;
+            _velocity.y += _config.JumpSustainAcceleration * Time.fixedDeltaTime;
 
-            if (_velocity.y > config.InitialJumpVelocity)
-                _velocity.y = config.InitialJumpVelocity;
+            if (_velocity.y > _config.InitialJumpVelocity)
+                _velocity.y = _config.InitialJumpVelocity;
         }
         
         private void HandleJumpCut()
@@ -337,12 +356,12 @@ namespace Features.Gameplay.CharacterController.Runtime
             if (_velocity.y <= 0f)
                 return;
 
-            if (_time < _jumpStartedTime + config.MinJumpCutTime)
+            if (_time < _jumpStartedTime + _config.MinJumpCutTime)
                 return;
 
             _endedJumpEarly = true;
 
-            _velocity.y *= config.JumpCutVelocityMultiplier;
+            _velocity.y *= _config.JumpCutVelocityMultiplier;
         }
 
         private void ExecuteJump()
@@ -355,9 +374,9 @@ namespace Features.Gameplay.CharacterController.Runtime
             _endedJumpEarly = false;
             _jumpStartedTime = _time;
 
-            _velocity.y = config.UseRampedJumpStart
-                ? config.JumpStartVelocity
-                : config.InitialJumpVelocity;
+            _velocity.y = _config.UseRampedJumpStart
+                ? _config.JumpStartVelocity
+                : _config.InitialJumpVelocity;
 
             Jumped?.Invoke();
         }
@@ -368,13 +387,13 @@ namespace Features.Gameplay.CharacterController.Runtime
 
         private void HandleHorizontalMovement()
         {
-            float targetSpeed = _input.Move.x * config.MaxSpeed;
+            float targetSpeed = _input.Move.x * _config.MaxSpeed;
 
             if (Mathf.Approximately(_input.Move.x, 0f))
             {
                 float deceleration = _grounded
-                    ? config.GroundDeceleration
-                    : config.AirDeceleration;
+                    ? _config.GroundDeceleration
+                    : _config.AirDeceleration;
 
                 _velocity.x = Mathf.MoveTowards(
                     _velocity.x,
@@ -387,7 +406,7 @@ namespace Features.Gameplay.CharacterController.Runtime
             _velocity.x = Mathf.MoveTowards(
                 _velocity.x,
                 targetSpeed,
-                config.Acceleration * Time.fixedDeltaTime);
+                _config.Acceleration * Time.fixedDeltaTime);
         }
 
         // --------------------------------------------------------------------
@@ -398,25 +417,25 @@ namespace Features.Gameplay.CharacterController.Runtime
         {
             if (_grounded && _velocity.y <= 0f)
             {
-                _velocity.y = config.GroundingForce;
+                _velocity.y = _config.GroundingForce;
                 return;
             }
 
-            float gravity = config.Gravity;
+            float gravity = _config.Gravity;
 
             if (_velocity.y < 0f)
             {
-                gravity *= config.FallGravityMultiplier;
+                gravity *= _config.FallGravityMultiplier;
             }
             else if (_endedJumpEarly && _velocity.y > 0f)
             {
-                gravity *= config.GravityOnReleaseMultiplier;
+                gravity *= _config.GravityOnReleaseMultiplier;
             }
 
             _velocity.y += gravity * Time.fixedDeltaTime;
 
-            if (_velocity.y < -config.MaxFallSpeed)
-                _velocity.y = -config.MaxFallSpeed;
+            if (_velocity.y < -_config.MaxFallSpeed)
+                _velocity.y = -_config.MaxFallSpeed;
         }
 
         // --------------------------------------------------------------------
@@ -425,24 +444,24 @@ namespace Features.Gameplay.CharacterController.Runtime
 
         private bool HandleDash()
         {
-            if (!config.DashEnabled)
+            if (!_config.DashEnabled)
                 return false;
 
             if (_isDashing)
             {
-                if (_time >= _dashStartedTime + config.DashDuration)
+                if (_time >= _dashStartedTime + _config.DashDuration)
                 {
                     EndDash();
                     return false;
                 }
 
-                _velocity = _dashDirection * config.DashSpeed;
+                _velocity = _dashDirection * _config.DashSpeed;
                 return true;
             }
 
             if (!HasBufferedDash)
             {
-                if (_dashBuffered && _time > _lastDashPressedTime + config.DashBuffer)
+                if (_dashBuffered && _time > _lastDashPressedTime + _config.DashBuffer)
                     _dashBuffered = false;
 
                 return false;
@@ -458,10 +477,10 @@ namespace Features.Gameplay.CharacterController.Runtime
         private bool CanStartDash()
         {
             bool cooldownReady =
-                _time >= _lastDashStartedTime + config.DashCooldown;
+                _time >= _lastDashStartedTime + _config.DashCooldown;
 
             bool hasDashAvailable =
-                _grounded || _airDashesUsed < config.AirDashes;
+                _grounded || _airDashesUsed < _config.AirDashes;
 
             return cooldownReady && hasDashAvailable;
         }
@@ -482,7 +501,7 @@ namespace Features.Gameplay.CharacterController.Runtime
 
             _endedJumpEarly = false;
 
-            _velocity = _dashDirection * config.DashSpeed;
+            _velocity = _dashDirection * _config.DashSpeed;
 
             Dashed?.Invoke(_dashDirection);
         }
@@ -491,7 +510,7 @@ namespace Features.Gameplay.CharacterController.Runtime
         {
             _isDashing = false;
 
-            _velocity.x *= config.DashEndSpeedMultiplier;
+            _velocity.x *= _config.DashEndSpeedMultiplier;
             _velocity.y = Mathf.Min(_velocity.y, 0f);
 
             DashEnded?.Invoke();
@@ -501,13 +520,13 @@ namespace Features.Gameplay.CharacterController.Runtime
         {
             Vector2 direction = _input.Move;
 
-            if (!config.AllowVerticalDash)
+            if (!_config.AllowVerticalDash)
                 direction.y = 0f;
 
             if (direction.sqrMagnitude < 0.01f)
                 direction = Vector2.right * _facingDirection;
 
-            if (!config.AllowVerticalDash)
+            if (!_config.AllowVerticalDash)
                 direction.x = direction.x >= 0f ? 1f : -1f;
 
             return direction.normalized;
@@ -537,13 +556,18 @@ namespace Features.Gameplay.CharacterController.Runtime
 
         private void ApplyMovement()
         {
-            SetBodyVelocity(_velocity);
+            SetBodyVelocity(_velocity + _externalVelocity);
+
+            _externalVelocity = Vector2.MoveTowards(
+                _externalVelocity,
+                Vector2.zero,
+                80f * Time.fixedDeltaTime);
         }
 
 #if UNITY_EDITOR
         private void OnValidate()
         {
-            if (config == null)
+            if (_config == null)
             {
                 Debug.LogWarning(
                     $"Assign {nameof(PlayerMovementConfig)} to {nameof(PlayerMovementController2D)}.",

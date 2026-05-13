@@ -32,7 +32,7 @@ MonoBehaviour:
     <PlayerLand>k__BackingField: {fileID: 11400000, guid: 13595d1d64850744fb61b761b88df12f, type: 2}
     <PlayerDash>k__BackingField: {fileID: 11400000, guid: 38bcee12e2d7055449dbaf446a8c6f93, type: 2}
     <PlayerFootstep>k__BackingField: {fileID: 11400000, guid: 14dc901bcb3107e41adaa90093488c4a, type: 2}
-    <PlayerHit>k__BackingField: {fileID: 0}
+    <PlayerHit>k__BackingField: {fileID: 11400000, guid: be44d23856bdf744ea1cadfba61e4c73, type: 2}
     <PickupItem>k__BackingField: {fileID: 0}
     <DropItem>k__BackingField: {fileID: 0}
     <Attack>k__BackingField: {fileID: 0}

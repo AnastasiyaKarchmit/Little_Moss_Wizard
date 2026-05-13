@@ -24,7 +24,7 @@ namespace Features.MainMenu.States.MainMenuState
             _disposables.Clear();
 
             if (titleText != null)
-                titleText.text = "Main Menu";
+                titleText.text = "little moss wizard";
 
             if (playButton != null)
             {

@@ -118,6 +118,10 @@ namespace Features.MainMenu
                     AwaitOperation.Drop)
                 .AddTo(_disposables);
 
+            _mainMenuPresenter.QuitRequested
+                .Subscribe(_ => Application.Quit())
+                .AddTo(_disposables);
+
             _settingsPresenter.BackRequested
                 .SubscribeAwait(
                     async (_, token) =>
