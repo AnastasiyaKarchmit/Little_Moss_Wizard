@@ -11,10 +11,10 @@ TagManager:
   - 
   - Water
   - UI
-  - Player
+  - MiddleGround
   - Ground
   - Hazards
-  - 
+  - Player
   - 
   - 
   - 
@@ -41,17 +41,29 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Background
+    uniqueID: 2280324139
+    locked: 0
+  - name: MiddleGround
+    uniqueID: 2578112725
+    locked: 0
+  - name: BackgroundDecorations
+    uniqueID: 3261811771
+    locked: 0
   - name: Hazards
     uniqueID: 2692439021
     locked: 0
   - name: Ground
     uniqueID: 1471997865
     locked: 0
+  - name: Player
+    uniqueID: 2626600473
+    locked: 0
   - name: Decorations
     uniqueID: 816188707
     locked: 0
-  - name: Player
-    uniqueID: 2626600473
+  - name: Foreground
+    uniqueID: 1132864739
     locked: 0
   m_RenderingLayers:
   - Default

@@ -10,5 +10,6 @@ namespace Core.UI.Windows.Data
         Error, 
         LoadingScreen,
         BootstrapLoadingScreen,
+        Inventory,
     }
 }

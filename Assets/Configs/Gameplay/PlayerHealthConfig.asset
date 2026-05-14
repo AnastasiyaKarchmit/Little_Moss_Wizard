@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f844d11744449e992d3ea5a7e44f4e2, type: 3}
   m_Name: PlayerHealthConfig
   m_EditorClassIdentifier: Assembly-CSharp::Features.Gameplay.CharacterController.Configs.PlayerHealthConfig
-  MaxHealth: 3
+  MaxHealth: 5
   StartWithFullHealth: 1
   InvulnerabilityTimeAfterHit: 1
   DisableGameplayOnDeath: 1

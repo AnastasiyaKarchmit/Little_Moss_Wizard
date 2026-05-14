@@ -13,6 +13,7 @@ namespace Features.Gameplay.CharacterController.Runtime
     public sealed class PlayerMovementController2D : MonoBehaviour, IPlayerMovementController
     {
         private PlayerMovementConfig _config;
+        private IPlayerBoostController _boostController;
 
         private Rigidbody2D _rigidbody;
         private Collider2D _collider;
@@ -46,6 +47,23 @@ namespace Features.Gameplay.CharacterController.Runtime
         private int _airDashesUsed;
         
         private Vector2 _externalVelocity;
+        
+        private float CurrentJumpHeightMultiplier =>
+            _boostController != null
+                ? Mathf.Max(1f, _boostController.JumpHeightMultiplier)
+                : 1f;
+
+        private float CurrentJumpVelocityMultiplier =>
+            Mathf.Sqrt(CurrentJumpHeightMultiplier);
+
+        private float CurrentInitialJumpVelocity =>
+            _config.InitialJumpVelocity * CurrentJumpVelocityMultiplier;
+
+        private float CurrentJumpStartVelocity =>
+            _config.JumpStartVelocity * CurrentJumpVelocityMultiplier;
+
+        private float CurrentJumpSustainAcceleration =>
+            _config.JumpSustainAcceleration * CurrentJumpVelocityMultiplier;
 
         public event Action<bool, float> GroundedChanged;
         public event Action Jumped;
@@ -74,10 +92,14 @@ namespace Features.Gameplay.CharacterController.Runtime
             _time <= _lastDashPressedTime + _config.DashBuffer;
 
         [Inject]
-        public void Construct(IPlayerMovementInputSource inputSource, PlayerMovementConfig config)
+        public void Construct(
+            IPlayerMovementInputSource inputSource,
+            PlayerMovementConfig config,
+            IPlayerBoostController boostController)
         {
             _inputSource = inputSource;
             _config = config;
+            _boostController = boostController;
         }
 
         private void Awake()
@@ -336,10 +358,10 @@ namespace Features.Gameplay.CharacterController.Runtime
             if (_time > _jumpStartedTime + _config.JumpSustainTime)
                 return;
 
-            _velocity.y += _config.JumpSustainAcceleration * Time.fixedDeltaTime;
+            _velocity.y += CurrentJumpSustainAcceleration * Time.fixedDeltaTime;
 
-            if (_velocity.y > _config.InitialJumpVelocity)
-                _velocity.y = _config.InitialJumpVelocity;
+            if (_velocity.y > CurrentInitialJumpVelocity)
+                _velocity.y = CurrentInitialJumpVelocity;
         }
         
         private void HandleJumpCut()
@@ -375,8 +397,8 @@ namespace Features.Gameplay.CharacterController.Runtime
             _jumpStartedTime = _time;
 
             _velocity.y = _config.UseRampedJumpStart
-                ? _config.JumpStartVelocity
-                : _config.InitialJumpVelocity;
+                ? CurrentJumpStartVelocity
+                : CurrentInitialJumpVelocity;
 
             Jumped?.Invoke();
         }

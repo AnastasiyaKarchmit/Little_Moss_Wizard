@@ -12,6 +12,7 @@ namespace Core.Input.Runtime
         public IInputAction<bool> Dash { get; }
         public IInputAction<bool> Jump { get; }
         public IInputAction<bool> Crouch { get; }
+        public IInputAction<bool> Inventory { get; }
 
         public GameplayInput(InputActions.PlayerActions actions)
         {
@@ -37,7 +38,7 @@ namespace Core.Input.Runtime
 
             Dash = new UnityInputAction<bool>(
                 actions.Sprint,
-                () => actions.Jump.IsPressed(),
+                () => actions.Sprint.IsPressed(),
                 context => context.ReadValueAsButton());
             
             Jump = new UnityInputAction<bool>(
@@ -48,6 +49,11 @@ namespace Core.Input.Runtime
             Crouch = new UnityInputAction<bool>(
                 actions.Crouch,
                 () => actions.Crouch.WasPressedThisFrame(),
+                context => context.ReadValueAsButton());
+            
+            Inventory = new UnityInputAction<bool>(
+                actions.Inventory,
+                () => actions.Inventory.IsPressed(),
                 context => context.ReadValueAsButton());
         }
 
@@ -60,6 +66,7 @@ namespace Core.Input.Runtime
             Dash.SetActive(active);
             Jump.SetActive(active);
             Crouch.SetActive(active);
+            Inventory.SetActive(active);
         }
     }
 }

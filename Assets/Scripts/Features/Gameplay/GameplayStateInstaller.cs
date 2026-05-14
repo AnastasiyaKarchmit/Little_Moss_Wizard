@@ -1,9 +1,12 @@
 using Core.AppStates.Components;
 using Features.Gameplay.CharacterController.Configs;
+using Features.Gameplay.CharacterController.Contracts;
 using Features.Gameplay.CharacterController.Runtime;
 using Features.Gameplay.Infrastructure;
 using Features.Gameplay.Infrastructure.States.GameplayState;
 using Features.Gameplay.Infrastructure.States.PauseState;
+using Features.Gameplay.Inventory.Contracts;
+using Features.Gameplay.Inventory.Runtime;
 using Features.Shared.SettingsState;
 using UnityEngine;
 using VContainer;
@@ -44,6 +47,20 @@ namespace Features.Gameplay
             
             builder.RegisterComponent(player.GetComponent<PlayerAudioController2D>())
                 .AsSelf();
+            
+            builder.RegisterComponent(player.GetComponent<PlayerHealth>())
+                .AsImplementedInterfaces()
+                .AsSelf();
+            
+            builder.RegisterComponentInHierarchy<PlayerBoostController>()
+                .AsSelf()
+                .As<IPlayerBoostController>();
+        }
+
+        private void RegisterInventory(IContainerBuilder builder)
+        {
+            builder.Register<InventoryService>(Lifetime.Singleton)
+                .As<IInventoryService>();
         }
     }
 }

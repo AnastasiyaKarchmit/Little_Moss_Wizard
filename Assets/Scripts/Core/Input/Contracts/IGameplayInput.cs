@@ -11,6 +11,9 @@ namespace Core.Input.Contracts
         IInputAction<bool> Dash { get; }
         IInputAction<bool> Jump { get; }
         IInputAction<bool> Crouch { get; }
+        
+        IInputAction<bool> Inventory { get; }
+
         void SetActive(bool active);
     }
 }

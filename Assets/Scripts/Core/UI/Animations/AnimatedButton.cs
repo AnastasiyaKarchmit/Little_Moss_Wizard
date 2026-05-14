@@ -7,100 +7,86 @@ namespace Core.UI.Animations
 {
     public sealed class AnimatedButton : Button
     {
-        [Header("Scale")]
-        [SerializeField] private float pressedScale = 0.92f;
-        [SerializeField] private float selectedScale = 1.05f;
-        [SerializeField] private float normalScale = 1f;
-
-        [Header("Timing")]
-        [SerializeField] private float pressDuration = 0.08f;
-        [SerializeField] private float releaseDuration = 0.12f;
-
-        [Header("Ease")]
-        [SerializeField] private Ease pressEase = Ease.OutQuad;
-        [SerializeField] private Ease releaseEase = Ease.OutBack;
-
+        [SerializeField] private SelectableAnimationSettings animationSettings = new();
         [SerializeField] private GameObject arrows;
 
-        private Tween _scaleTween;
+        private SelectableScaleAnimator _animator;
         private RectTransform _rectTransform;
 
         protected override void Awake()
         {
             base.Awake();
+
             _rectTransform = transform as RectTransform;
+
+            _animator = new SelectableScaleAnimator(
+                _rectTransform,
+                arrows,
+                animationSettings,
+                gameObject);
         }
 
         protected override void OnDisable()
         {
             base.OnDisable();
-
-            KillTween();
-
-            if (_rectTransform != null)
-                _rectTransform.localScale = Vector3.one * normalScale;
-            
-            arrows.gameObject.SetActive(false);
+            _animator?.Reset();
         }
 
         protected override void DoStateTransition(SelectionState state, bool instant)
         {
             base.DoStateTransition(state, instant);
-            
-            if (!IsInteractable())
+
+            if (_animator == null)
                 return;
-            
+
+            if (!IsInteractable())
+            {
+                _animator.SetDeselected();
+                return;
+            }
+
             switch (state)
             {
                 case SelectionState.Normal:
-                    SetDeselected();
+                    _animator.SetDeselected();
                     break;
-                case SelectionState.Pressed:
-                    ScaleTo(pressedScale, releaseDuration, releaseEase);
-                    arrows.gameObject.SetActive(true);
-                    break;
+
                 case SelectionState.Highlighted:
-                    SetSelected();
-                    break;
                 case SelectionState.Selected:
-                    SetSelected();
+                    _animator.SetSelected();
                     break;
+
+                case SelectionState.Pressed:
+                    _animator.SetPressed();
+                    break;
+
                 case SelectionState.Disabled:
-                    SetDeselected();
+                    _animator.SetDeselected();
                     break;
             }
         }
-        
+
         public override void OnPointerEnter(PointerEventData eventData)
         {
             base.OnPointerEnter(eventData);
-        
+
+            if (!IsInteractable())
+                return;
+
+            _animator.SetSelected();
+            
+            if (EventSystem.current != null)
+                EventSystem.current.SetSelectedGameObject(gameObject);
+        }
+
+        public override void OnPointerExit(PointerEventData eventData)
+        {
+            base.OnPointerExit(eventData);
+            
             if (!IsInteractable())
                 return;
             
-            EventSystem.current.SetSelectedGameObject(gameObject);
-        
-            ScaleTo(IsSelected(eventData) ? selectedScale : normalScale, releaseDuration, releaseEase);
-        }
-
-        public override void OnSelect(BaseEventData eventData)
-        {
-            base.OnSelect(eventData);
-
-            if (!IsInteractable())
-                return;
-
-            SetSelected();
-        }
-
-        public override void OnDeselect(BaseEventData eventData)
-        {
-            base.OnDeselect(eventData);
-
-            if (!IsInteractable())
-                return;
-            
-            SetDeselected();
+            _animator.SetDeselected();
         }
 
         public override void OnSubmit(BaseEventData eventData)
@@ -110,54 +96,13 @@ namespace Core.UI.Animations
             if (!IsInteractable())
                 return;
 
-            PlaySubmitAnimation();
+            _animator?.PlaySubmitAnimation(IsSelected());
         }
 
-        private void SetSelected()
-        {
-            ScaleTo(selectedScale, releaseDuration, releaseEase);
-            arrows.gameObject.SetActive(true);
-        }
-
-        private void SetDeselected()
-        {
-            arrows.gameObject.SetActive(false);
-            ScaleTo(normalScale, releaseDuration, releaseEase);
-        }
-        
-        private void PlaySubmitAnimation()
-        {
-            KillTween();
-
-            float targetScale = IsSelected(null) ? selectedScale : normalScale;
-
-            _scaleTween = DOTween.Sequence()
-                .Append(_rectTransform.DOScale(pressedScale, pressDuration).SetEase(pressEase))
-                .Append(_rectTransform.DOScale(targetScale, releaseDuration).SetEase(releaseEase))
-                .SetLink(gameObject);
-        }
-
-        private void ScaleTo(float scale, float duration, Ease ease)
-        {
-            KillTween();
-
-            _scaleTween = _rectTransform
-                .DOScale(scale, duration)
-                .SetEase(ease)
-                .SetLink(gameObject);
-        }
-
-        private void KillTween()
-        {
-            if (_scaleTween != null && _scaleTween.IsActive())
-                _scaleTween.Kill();
-        }
-
-        private bool IsSelected(BaseEventData eventData)
+        private bool IsSelected()
         {
             return EventSystem.current != null &&
                    EventSystem.current.currentSelectedGameObject == gameObject;
         }
-        
     }
 }

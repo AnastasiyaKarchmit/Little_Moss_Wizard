@@ -9,6 +9,7 @@ namespace Features.Gameplay.CharacterController.Runtime
         [SerializeField] private PlayerMovementController2D movement;
         [SerializeField] private PlayerMovementAnimator2D movementAnimator;
         [SerializeField] private PlayerAudioController2D audioController;
+        [SerializeField] private PlayerBoostController boostController;
         
         [Header("Health")]
         [SerializeField] private PlayerHealth health;
@@ -58,8 +59,11 @@ namespace Features.Gameplay.CharacterController.Runtime
             if (audioController != null)
                 audioController.enabled = active;
 
-            // if (collisionController != null)
-            //     collisionController.enabled = active;
+            if (collisionController != null)
+                collisionController.enabled = active;
+            
+            if (boostController != null)
+                boostController.enabled = active;
         }
 
         public void EnableGameplay()
@@ -85,6 +89,9 @@ namespace Features.Gameplay.CharacterController.Runtime
 
             if (collisionController == null)
                 collisionController = GetComponentInChildren<PlayerCollisionController2D>();
+            
+            if (boostController == null)
+                boostController = GetComponentInChildren<PlayerBoostController>();
         }
         
         private void OnDamaged(int damageAmount)
