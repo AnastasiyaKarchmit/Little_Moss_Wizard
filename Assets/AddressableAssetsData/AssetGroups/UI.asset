@@ -40,6 +40,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8606d85428fc6cc48b7de1f1b10b05a7
+    m_Address: Assets/Prefabs/Gameplay/InventoryWindow.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: eb48ac2d9a4087048b6cc5ff0dde009c
     m_Address: MainMenuView
     m_ReadOnly: 0

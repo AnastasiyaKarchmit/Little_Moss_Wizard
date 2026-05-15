@@ -2,7 +2,9 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Features.Gameplay.Infrastructure.States.GameplayState;
+using Features.Gameplay.Infrastructure.States.InventoryState;
 using Features.Gameplay.Infrastructure.States.PauseState;
+using Features.Gameplay.Inventory;
 using Features.Shared.SettingsState;
 using R3;
 using Stateless;
@@ -14,20 +16,23 @@ namespace Features.Gameplay.Infrastructure
     {
         Gameplay,
         Pause,
-        Settings
+        Settings,
+        Inventory
     }
 
     public enum GameplayFlowTrigger
     {
         StartGameplay,
         OpenPause,
-        OpenSettings
+        OpenSettings,
+        OpenInventory
     }
     public class GameplayFlowController : IDisposable
     {
         private readonly GameplayPresenter _gameplayPresenter;
         private readonly PausePresenter _pausePresenter;
         private readonly SettingsPresenter _settingsPresenter;
+        private readonly InventoryPresenter _inventoryPresenter;
         
         private readonly StateMachine<GameplayFlowState, GameplayFlowTrigger> _stateMachine;
         private readonly CompositeDisposable _disposables = new();
@@ -42,14 +47,16 @@ namespace Features.Gameplay.Infrastructure
         public GameplayFlowController(
             GameplayPresenter gameplayPresenter,
             PausePresenter pausePresenter,
-            SettingsPresenter settingsPresenter)
+            SettingsPresenter settingsPresenter,
+            InventoryPresenter inventoryPresenter)
         {
-            _gameplayPresenter = gameplayPresenter ??  throw new ArgumentNullException(nameof(gameplayPresenter));
-            _pausePresenter = pausePresenter ??  throw new ArgumentNullException(nameof(pausePresenter));
-            _settingsPresenter = settingsPresenter ??  throw new ArgumentNullException(nameof(settingsPresenter));
-            
-            _stateMachine =  new StateMachine<GameplayFlowState, GameplayFlowTrigger>(GameplayFlowState.Gameplay);
-            
+            _gameplayPresenter = gameplayPresenter ?? throw new ArgumentNullException(nameof(gameplayPresenter));
+            _pausePresenter = pausePresenter ?? throw new ArgumentNullException(nameof(pausePresenter));
+            _settingsPresenter = settingsPresenter ?? throw new ArgumentNullException(nameof(settingsPresenter));
+            _inventoryPresenter = inventoryPresenter ?? throw new ArgumentNullException(nameof(inventoryPresenter));
+
+            _stateMachine = new StateMachine<GameplayFlowState, GameplayFlowTrigger>(GameplayFlowState.Gameplay);
+
             ConfigureStateMachine();
             SubscribeToPresenterEvents();
         }
@@ -57,10 +64,11 @@ namespace Features.Gameplay.Infrastructure
         public async UniTask EnterAsync(CancellationToken token)
         {
             _currentToken = token;
-            
+
             _gameplayPresenter.HideInstantly();
             _pausePresenter.HideInstantly();
             _settingsPresenter.HideInstantly();
+            _inventoryPresenter.HideInstantly();
 
             await _gameplayPresenter.EnterAsync(token);
         }
@@ -70,7 +78,8 @@ namespace Features.Gameplay.Infrastructure
             await UniTask.WhenAll(
                 _gameplayPresenter.ExitAsync(token),
                 _pausePresenter.ExitAsync(token),
-                _settingsPresenter.ExitAsync(token));
+                _settingsPresenter.ExitAsync(token),
+                _inventoryPresenter.ExitAsync(token));
         }
         
         private void ConfigureStateMachine()
@@ -86,7 +95,8 @@ namespace Features.Gameplay.Infrastructure
                     await UniTask.SwitchToMainThread();
                     await _gameplayPresenter.ExitAsync(_currentToken);
                 })
-                .Permit(GameplayFlowTrigger.OpenPause, GameplayFlowState.Pause);
+                .Permit(GameplayFlowTrigger.OpenPause, GameplayFlowState.Pause)
+                .Permit(GameplayFlowTrigger.OpenInventory, GameplayFlowState.Inventory);
 
             _stateMachine.Configure(GameplayFlowState.Pause)
                 .OnEntryAsync(async () =>
@@ -114,6 +124,19 @@ namespace Features.Gameplay.Infrastructure
                     await _settingsPresenter.ExitAsync(_currentToken);
                 })
                 .Permit(GameplayFlowTrigger.OpenPause, GameplayFlowState.Pause);
+
+            _stateMachine.Configure(GameplayFlowState.Inventory)
+                .OnEntryAsync(async () =>
+                {
+                    await UniTask.SwitchToMainThread();
+                    await _inventoryPresenter.EnterAsync(_currentToken);
+                })
+                .OnExitAsync(async () =>
+                {
+                    await UniTask.SwitchToMainThread();
+                    await _inventoryPresenter.ExitAsync(_currentToken);
+                })
+                .Permit(GameplayFlowTrigger.StartGameplay, GameplayFlowState.Gameplay);
 
             _stateMachine.OnTransitionCompleted(transition =>
             {
@@ -166,6 +189,26 @@ namespace Features.Gameplay.Infrastructure
                     },
                     AwaitOperation.Drop)
                 .AddTo(_disposables);
+            
+            _gameplayPresenter.InventoryRequested
+                .SubscribeAwait(
+                    async (_, token) =>
+                    {
+                        await UniTask.SwitchToMainThread();
+                        await FireAsync(GameplayFlowTrigger.OpenInventory);
+                    },
+                    AwaitOperation.Drop)
+                .AddTo(_disposables);
+
+            _inventoryPresenter.CloseRequested
+                .SubscribeAwait(
+                    async (_, token) =>
+                    {
+                        await UniTask.SwitchToMainThread();
+                        await FireAsync(GameplayFlowTrigger.StartGameplay);
+                    },
+                    AwaitOperation.Drop)
+                .AddTo(_disposables);
         }
         
         private async UniTask FireAsync(GameplayFlowTrigger trigger)
@@ -199,7 +242,8 @@ namespace Features.Gameplay.Infrastructure
         {
             _disposables.Dispose();
             _backToMenuRequested.Dispose();
-            
+
+            _inventoryPresenter.Dispose();
             _settingsPresenter.Dispose();
             _pausePresenter.Dispose();
             _gameplayPresenter.Dispose();

@@ -13,23 +13,19 @@ namespace Features.Gameplay.Inventory.Runtime
         [SerializeField, Min(1)] private int amount = 1;
         [SerializeField] private bool destroyAfterPickup = true;
 
-        private IInventoryService _inventoryService;
-
-        [Inject]
-        public void Construct(IInventoryService inventoryService)
-        {
-            _inventoryService = inventoryService;
-        }
+        private PlayerCollisionController2D _playerCollisionController;
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (_inventoryService == null || item == null)
+            if (item == null)
                 return;
 
-            if (!other.GetComponentInParent<PlayerController>())
+            var controller = other.GetComponent<PlayerCollisionController2D>();
+            
+            if (controller == null)
                 return;
 
-            bool added = _inventoryService.AddItem(item, amount);
+            bool added = controller.TryHandleCollectable(item, amount);
 
             if (added && destroyAfterPickup)
                 Destroy(gameObject);

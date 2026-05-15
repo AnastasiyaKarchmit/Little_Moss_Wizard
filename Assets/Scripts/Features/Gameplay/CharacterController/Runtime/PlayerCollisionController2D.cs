@@ -1,5 +1,8 @@
 using Features.Gameplay.CharacterController.Contracts;
+using Features.Gameplay.Inventory.Configs;
+using Features.Gameplay.Inventory.Contracts;
 using UnityEngine;
+using VContainer;
 
 namespace Features.Gameplay.CharacterController.Runtime
 {
@@ -9,6 +12,12 @@ namespace Features.Gameplay.CharacterController.Runtime
         [Header("References")]
         [SerializeField] private PlayerController player;
         [SerializeField] private PlayerDamageReceiver2D damageReceiver;
+        
+        private IInventoryService _inventoryService;
+
+        [Inject]
+        public void Construct(IInventoryService inventoryService)
+            => _inventoryService = inventoryService;
 
         private void Awake()
         {
@@ -18,7 +27,6 @@ namespace Features.Gameplay.CharacterController.Runtime
         private void OnTriggerEnter2D(Collider2D other)
         {
             TryHandleDamageSource(other);
-            // TryHandleCollectable(other);
             // TryEnterInteraction(other);
         }
 
@@ -30,6 +38,11 @@ namespace Features.Gameplay.CharacterController.Runtime
         private void OnTriggerExit2D(Collider2D other)
         {
             //TryExitInteraction(other);
+        }
+
+        public bool TryHandleCollectable(InventoryItemDefinition item, int amount)
+        {
+            return _inventoryService.AddItem(item, amount);
         }
 
         private void TryHandleDamageSource(Collider2D other)
@@ -44,42 +57,6 @@ namespace Features.Gameplay.CharacterController.Runtime
 
             damageReceiver.TryReceiveDamage(damageSource, transform.position);
         }
-
-        // private void TryHandleCollectable(Collider2D other)
-        // {
-        //     ICollectable2D collectable = GetComponentFromCollider<ICollectable2D>(other);
-        //
-        //     if (collectable == null)
-        //         return;
-        //
-        //     if (!collectable.CanCollect)
-        //         return;
-        //
-        //     collectable.Collect(player);
-        // }
-        //
-        // private void TryEnterInteraction(Collider2D other)
-        // {
-        //     IInteractable2D interactable = GetComponentFromCollider<IInteractable2D>(other);
-        //
-        //     if (interactable == null)
-        //         return;
-        //
-        //     if (!interactable.CanInteract)
-        //         return;
-        //
-        //     interactable.EnterInteractionRange(player);
-        // }
-        //
-        // private void TryExitInteraction(Collider2D other)
-        // {
-        //     IInteractable2D interactable = GetComponentFromCollider<IInteractable2D>(other);
-        //
-        //     if (interactable == null)
-        //         return;
-        //
-        //     interactable.ExitInteractionRange(player);
-        // }
 
         private static T GetComponentFromCollider<T>(Collider2D collider)
             where T : class

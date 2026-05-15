@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using Core.UI.Views;
 using Features.Gameplay.Inventory.Data;
+using Features.Gameplay.Inventory.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Features.Gameplay.Inventory.UI
+namespace Features.Gameplay.Infrastructure.States.InventoryState
 {
     public sealed class InventoryView : BaseView
     {
@@ -17,36 +18,22 @@ namespace Features.Gameplay.Inventory.UI
         [SerializeField] private TMP_Text itemNameText;
         [SerializeField] private TMP_Text itemDescriptionText;
 
-        [Header("Buttons")]
-        [SerializeField] private Button useButton;
-        [SerializeField] private Button closeButton;
-
+        private Action<int> _slotFocused;
         private Action<int> _slotClicked;
-        private Action _useClicked;
-        private Action _closeClicked;
 
         public void Initialize(
-            Action<int> slotClicked,
-            Action useClicked,
-            Action closeClicked)
+            Action<int> slotFocused,
+            Action<int> slotClicked)
         {
+            _slotFocused = slotFocused;
             _slotClicked = slotClicked;
-            _useClicked = useClicked;
-            _closeClicked = closeClicked;
 
             for (int i = 0; i < slots.Count; i++)
-                slots[i].Initialize(i, OnSlotClicked);
-
-            if (useButton != null)
             {
-                useButton.onClick.RemoveListener(OnUseClicked);
-                useButton.onClick.AddListener(OnUseClicked);
-            }
-
-            if (closeButton != null)
-            {
-                closeButton.onClick.RemoveListener(OnCloseClicked);
-                closeButton.onClick.AddListener(OnCloseClicked);
+                slots[i].Initialize(
+                    i,
+                    OnSlotFocused,
+                    OnSlotClicked);
             }
         }
 
@@ -64,10 +51,21 @@ namespace Features.Gameplay.Inventory.UI
                 slots[i].SetSelected(i == selectedIndex);
             }
 
-            SetSelectedItemDetails(
+            InventorySlotData selectedSlot =
                 selectedIndex >= 0 && selectedIndex < inventorySlots.Count
                     ? inventorySlots[selectedIndex]
-                    : InventorySlotData.Empty);
+                    : InventorySlotData.Empty;
+
+            SetSelectedItemDetails(selectedSlot);
+        }
+
+        public void ClearDetails()
+        {
+            if (itemNameText != null)
+                itemNameText.text = string.Empty;
+
+            if (itemDescriptionText != null)
+                itemDescriptionText.text = string.Empty;
         }
 
         private void SetSelectedItemDetails(InventorySlotData slot)
@@ -79,33 +77,16 @@ namespace Features.Gameplay.Inventory.UI
 
             if (itemDescriptionText != null)
                 itemDescriptionText.text = hasItem ? slot.Item.Description : string.Empty;
+        }
 
-            if (useButton != null)
-                useButton.interactable = hasItem && slot.Item.CanUse;
+        private void OnSlotFocused(int index)
+        {
+            _slotFocused?.Invoke(index);
         }
 
         private void OnSlotClicked(int index)
         {
             _slotClicked?.Invoke(index);
-        }
-
-        private void OnUseClicked()
-        {
-            _useClicked?.Invoke();
-        }
-
-        private void OnCloseClicked()
-        {
-            _closeClicked?.Invoke();
-        }
-
-        private void OnDestroy()
-        {
-            if (useButton != null)
-                useButton.onClick.RemoveListener(OnUseClicked);
-
-            if (closeButton != null)
-                closeButton.onClick.RemoveListener(OnCloseClicked);
         }
 
 #if UNITY_EDITOR

@@ -4,7 +4,9 @@ using Features.Gameplay.CharacterController.Contracts;
 using Features.Gameplay.CharacterController.Runtime;
 using Features.Gameplay.Infrastructure;
 using Features.Gameplay.Infrastructure.States.GameplayState;
+using Features.Gameplay.Infrastructure.States.InventoryState;
 using Features.Gameplay.Infrastructure.States.PauseState;
+using Features.Gameplay.Inventory;
 using Features.Gameplay.Inventory.Contracts;
 using Features.Gameplay.Inventory.Runtime;
 using Features.Shared.SettingsState;
@@ -20,6 +22,7 @@ namespace Features.Gameplay
         [SerializeField] private PlayerMovementConfig playerMovementConfig;
         public override void RegisterDependencies(IContainerBuilder builder)
         {
+            RegisterInventory(builder);
             builder.Register<GameplayModel>(Lifetime.Singleton);
             builder.Register<GameplayPresenter>(Lifetime.Singleton);
             builder.Register<PausePresenter>(Lifetime.Singleton);
@@ -45,22 +48,30 @@ namespace Features.Gameplay
                 .AsImplementedInterfaces()
                 .AsSelf();
             
-            builder.RegisterComponent(player.GetComponent<PlayerAudioController2D>())
+            builder.RegisterComponent(player.GetComponentInChildren<PlayerAudioController2D>())
                 .AsSelf();
             
-            builder.RegisterComponent(player.GetComponent<PlayerHealth>())
+            builder.RegisterComponent(player.GetComponentInChildren<PlayerHealth>())
                 .AsImplementedInterfaces()
                 .AsSelf();
             
-            builder.RegisterComponentInHierarchy<PlayerBoostController>()
+            builder.RegisterComponent(player.GetComponentInChildren<PlayerBoostController>())
                 .AsSelf()
                 .As<IPlayerBoostController>();
+
+            builder.RegisterComponent(player.GetComponent<PlayerCollisionController2D>());
         }
 
         private void RegisterInventory(IContainerBuilder builder)
         {
+            builder.Register<InventoryItemUseContext>(Lifetime.Singleton)
+                .As<IInventoryItemUseContext>();
+            
             builder.Register<InventoryService>(Lifetime.Singleton)
                 .As<IInventoryService>();
+            
+            builder.Register<InventoryPresenter>(Lifetime.Singleton)
+                .AsSelf();
         }
     }
 }

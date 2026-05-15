@@ -7,6 +7,7 @@ using Core.UI.Windows.Contracts;
 using Core.UI.Windows.Data;
 using Cysharp.Threading.Tasks;
 using Features.Gameplay.CharacterController.Contracts;
+using Features.Gameplay.Inventory;
 using R3;
 using UnityEngine;
 
@@ -22,6 +23,7 @@ namespace Features.Gameplay.Infrastructure.States.GameplayState
         private readonly CompositeDisposable _screenDisposables = new();
         
         private readonly ReactiveCommand<Unit> _pauseCommand = new();
+        private readonly ReactiveCommand<Unit> _inventoryCommand = new();
         
         private readonly TimeSpan _inputThrottle = TimeSpan.FromMilliseconds(300);
         
@@ -29,11 +31,13 @@ namespace Features.Gameplay.Infrastructure.States.GameplayState
         private bool _isSubscribedToHealth;
         
         public Observable<Unit> PauseRequested => _pauseCommand;
+        public Observable<Unit> InventoryRequested => _inventoryCommand;
         
         public GameplayPresenter(
             GameplayModel model,
             IWindowService windowService,
-            IInputService inputService, IPlayerHealth playerHealth)
+            IInputService inputService,
+            IPlayerHealth playerHealth)
         {
             _model = model ?? throw new ArgumentNullException(nameof(model));
             _windowService = windowService ?? throw new ArgumentNullException(nameof(windowService));
@@ -92,6 +96,12 @@ namespace Features.Gameplay.Infrastructure.States.GameplayState
                 .ThrottleFirst(_inputThrottle)
                 .Subscribe(_ => _pauseCommand.Execute(Unit.Default))
                 .AddTo(_screenDisposables);
+            
+            _inputService.Gameplay.Inventory.Started
+                .Where(pressed => pressed)
+                .ThrottleFirst(_inputThrottle)
+                .Subscribe(_ => _inventoryCommand.Execute(Unit.Default))
+                .AddTo(_screenDisposables);
         }
         
         private void SubscribeToHealth()
@@ -111,9 +121,12 @@ namespace Features.Gameplay.Infrastructure.States.GameplayState
             if (!_isSubscribedToHealth)
                 return;
 
-            _playerHealth.HealthChanged -= OnHealthChanged;
-            _playerHealth.Damaged -= OnDamaged;
-            _playerHealth.Died -= OnDied;
+            if (_playerHealth != null)
+            {
+                _playerHealth.HealthChanged -= OnHealthChanged;
+                _playerHealth.Damaged -= OnDamaged;
+                _playerHealth.Died -= OnDied;
+            }
 
             _isSubscribedToHealth = false;
         }
@@ -138,7 +151,10 @@ namespace Features.Gameplay.Infrastructure.States.GameplayState
         public void Dispose()
         {
             _screenDisposables.Dispose();
+            UnsubscribeFromHealth();
+            
             _pauseCommand.Dispose();
+            _inventoryCommand.Dispose();
         }
     }
 }

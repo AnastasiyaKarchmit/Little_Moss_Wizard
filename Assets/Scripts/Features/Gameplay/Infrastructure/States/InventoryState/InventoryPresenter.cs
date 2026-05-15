@@ -2,26 +2,31 @@ using System;
 using System.Threading;
 using Core.Input.Contracts;
 using Core.Input.Runtime;
+using Core.Patterns.MVP;
 using Core.UI.Windows.Contracts;
 using Core.UI.Windows.Data;
 using Cysharp.Threading.Tasks;
 using Features.Gameplay.Inventory.Contracts;
-using Features.Gameplay.Inventory.UI;
+using R3;
 using UnityEngine;
 
-namespace Features.Gameplay.Inventory
+namespace Features.Gameplay.Infrastructure.States.InventoryState
 {
-    public sealed class InventoryPresenter : IDisposable
+    public sealed class InventoryPresenter : IPresenter
     {
         private readonly IInventoryService _inventoryService;
         private readonly IWindowService _windowService;
         private readonly IInputService _inputService;
 
+        private readonly CompositeDisposable _screenDisposables = new();
+        private readonly ReactiveCommand<Unit> _closeCommand = new();
+
+        private readonly TimeSpan _inputThrottle = TimeSpan.FromMilliseconds(300);
+
         private InventoryView _view;
         private int _selectedIndex;
-        private bool _isOpen;
 
-        public bool IsOpen => _isOpen;
+        public Observable<Unit> CloseRequested => _closeCommand;
 
         public InventoryPresenter(
             IInventoryService inventoryService,
@@ -33,13 +38,8 @@ namespace Features.Gameplay.Inventory
             _inputService = inputService ?? throw new ArgumentNullException(nameof(inputService));
         }
 
-        public async UniTask OpenAsync(CancellationToken token = default)
+        public async UniTask EnterAsync(CancellationToken token = default)
         {
-            if (_isOpen)
-                return;
-
-            _isOpen = true;
-
             _view = await _windowService.GetOrCreateAsync<InventoryView>(
                 WindowId.Inventory,
                 token);
@@ -47,9 +47,8 @@ namespace Features.Gameplay.Inventory
             token.ThrowIfCancellationRequested();
 
             _view.Initialize(
-                OnSlotClicked,
-                OnUseClicked,
-                OnCloseClicked);
+                OnSlotFocused,
+                OnSlotClicked);
 
             _inventoryService.Changed += RefreshView;
 
@@ -58,54 +57,57 @@ namespace Features.Gameplay.Inventory
 
             await _view.ShowAsync();
 
-            _inputService.SetMode(InputMode.UIOnly);
+            SubscribeToInput();
 
+            _inputService.SetMode(InputMode.UIOnly);
             Time.timeScale = 0f;
         }
 
-        public async UniTask CloseAsync(CancellationToken token = default)
+        public async UniTask ExitAsync(CancellationToken token = default)
         {
-            if (!_isOpen)
-                return;
-
-            _isOpen = false;
-
+            _screenDisposables.Clear();
             _inventoryService.Changed -= RefreshView;
 
             if (_view != null)
                 await _view.HideAsync();
 
             _view = null;
-
-            Time.timeScale = 1f;
-            _inputService.SetMode(InputMode.Gameplay);
         }
 
-        public async UniTask ToggleAsync(CancellationToken token = default)
+        public void HideInstantly()
         {
-            if (_isOpen)
-                await CloseAsync(token);
-            else
-                await OpenAsync(token);
+            _screenDisposables.Clear();
+            _inventoryService.Changed -= RefreshView;
+
+            _view?.HideInstantly();
+            _view = null;
         }
 
-        private void OnSlotClicked(int index)
+        private void SubscribeToInput()
+        {
+            _screenDisposables.Clear();
+
+            _inputService.UI.Cancel.Performed
+                .Where(pressed => pressed)
+                .ThrottleFirst(_inputThrottle)
+                .Subscribe(_ => _closeCommand.Execute(Unit.Default))
+                .AddTo(_screenDisposables);
+        }
+        
+        private void OnSlotFocused(int index)
         {
             _selectedIndex = index;
             RefreshView();
         }
 
-        private void OnUseClicked()
+        private void OnSlotClicked(int index)
         {
-            _inventoryService.UseAt(_selectedIndex);
+            _selectedIndex = index;
+
+            bool used = _inventoryService.UseAt(_selectedIndex);
 
             ClampSelectedIndex();
             RefreshView();
-        }
-
-        private void OnCloseClicked()
-        {
-            CloseAsync().Forget();
         }
 
         private void RefreshView()
@@ -132,13 +134,14 @@ namespace Features.Gameplay.Inventory
 
         public void Dispose()
         {
+            _screenDisposables.Dispose();
             _inventoryService.Changed -= RefreshView;
+            _closeCommand.Dispose();
 
             if (_view != null)
                 _view.HideInstantly();
 
             _view = null;
-            _isOpen = false;
         }
     }
 }

@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a29b4aef1bfe40e4a9a3dfd3287c37f1, type: 3}
   m_Name: JumpPotionItemDefenition
   m_EditorClassIdentifier: Assembly-CSharp::Features.Gameplay.Inventory.Configs.InventoryItemDefinition
-  id: 
-  displayName: 
-  description: 
-  icon: {fileID: 0}
+  id: 4
+  displayName: Jump Booster
+  description: Bosts jump for 15 seconds.
+  icon: {fileID: 2787076443579001349, guid: 8f78153683be82941a90775446a0142c, type: 3}
   stackable: 1
   maxStack: 9
   consumeOnUse: 1
