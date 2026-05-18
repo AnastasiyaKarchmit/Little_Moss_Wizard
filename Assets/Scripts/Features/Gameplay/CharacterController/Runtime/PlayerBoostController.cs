@@ -12,6 +12,8 @@ namespace Features.Gameplay.CharacterController.Runtime
         private float _jumpBoostEndTime;
 
         public event Action JumpBoostChanged;
+        public event Action JumpBoostApplied;
+        public event Action JumpBoostCleared;
 
         public bool HasJumpBoost { get; private set; }
 
@@ -49,6 +51,7 @@ namespace Features.Gameplay.CharacterController.Runtime
 
             _jumpBoostEndTime = Time.time + duration;
 
+            JumpBoostApplied?.Invoke();
             JumpBoostChanged?.Invoke();
         }
 
@@ -61,6 +64,7 @@ namespace Features.Gameplay.CharacterController.Runtime
             JumpHeightMultiplier = DefaultJumpMultiplier;
             _jumpBoostEndTime = 0f;
 
+            JumpBoostCleared?.Invoke();
             JumpBoostChanged?.Invoke();
         }
     }

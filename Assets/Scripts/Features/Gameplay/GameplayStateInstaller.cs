@@ -60,6 +60,8 @@ namespace Features.Gameplay
                 .As<IPlayerBoostController>();
 
             builder.RegisterComponent(player.GetComponent<PlayerCollisionController2D>());
+
+            builder.RegisterComponent(player.GetComponent<PlayerMovementAnimator2D>());
         }
 
         private void RegisterInventory(IContainerBuilder builder)

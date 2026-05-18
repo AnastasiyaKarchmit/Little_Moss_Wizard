@@ -55,6 +55,7 @@ namespace Core.UI.Animations
                     .SetEase(_settings.PressEase))
                 .Append(_rectTransform.DOScale(targetScale, _settings.ReleaseDuration)
                     .SetEase(_settings.ReleaseEase))
+                .SetUpdate(true)
                 .SetLink(_owner);
         }
 
@@ -78,6 +79,7 @@ namespace Core.UI.Animations
             _scaleTween = _rectTransform
                 .DOScale(scale, duration)
                 .SetEase(ease)
+                .SetUpdate(true)
                 .SetLink(_owner);
         }
 

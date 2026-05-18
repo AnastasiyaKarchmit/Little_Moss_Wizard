@@ -12,6 +12,7 @@ namespace Features.Gameplay.Inventory.Runtime
         private readonly List<InventorySlotData> _slots;
 
         public event Action Changed;
+        public event Action<InventoryItemDefinition, int> ItemAdded;
 
         public IReadOnlyList<InventorySlotData> Slots => _slots;
         public int Capacity => _slots.Count;
@@ -40,11 +41,15 @@ namespace Features.Gameplay.Inventory.Runtime
 
             remaining = AddToEmptySlots(item, remaining);
 
-            bool addedEverything = remaining <= 0;
+            int addedAmount = amount - remaining;
 
+            if (addedAmount <= 0)
+                return false;
+
+            ItemAdded?.Invoke(item, addedAmount);
             Changed?.Invoke();
 
-            return addedEverything;
+            return remaining <= 0;
         }
 
         public bool RemoveAt(int index, int amount = 1)

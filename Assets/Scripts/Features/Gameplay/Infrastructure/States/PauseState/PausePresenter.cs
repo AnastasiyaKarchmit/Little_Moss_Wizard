@@ -71,6 +71,8 @@ namespace Features.Gameplay.Infrastructure.States.PauseState
                 await _view.HideAsync();
 
             _view = null;
+            
+            Time.timeScale = 1;
         }
         
         public void HideInstantly()

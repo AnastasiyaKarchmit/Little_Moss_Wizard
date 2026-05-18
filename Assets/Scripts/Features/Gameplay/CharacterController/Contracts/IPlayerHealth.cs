@@ -7,6 +7,7 @@ namespace Features.Gameplay.CharacterController.Contracts
         event Action<int, int> HealthChanged;
         event Action<int> Damaged;
         event Action Died;
+        event Action<int> Healed;
 
         int CurrentHealth { get; }
         int MaxHealth { get; }

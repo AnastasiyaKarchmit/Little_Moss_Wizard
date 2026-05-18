@@ -5,6 +5,8 @@ namespace Features.Gameplay.CharacterController.Contracts
     public interface IPlayerBoostController
     {
         event Action JumpBoostChanged;
+        event Action JumpBoostApplied;
+        event Action JumpBoostCleared;
 
         bool HasJumpBoost { get; }
         float JumpHeightMultiplier { get; }

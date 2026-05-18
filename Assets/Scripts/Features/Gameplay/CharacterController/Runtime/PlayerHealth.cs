@@ -17,6 +17,7 @@ namespace Features.Gameplay.CharacterController.Runtime
         public event Action<int, int> HealthChanged;
         public event Action<int> Damaged;
         public event Action Died;
+        public event Action<int> Healed;
 
         public int CurrentHealth { get; private set; }
         public int MaxHealth => config != null ? config.MaxHealth : 1;
@@ -75,8 +76,13 @@ namespace Features.Gameplay.CharacterController.Runtime
 
             CurrentHealth = Mathf.Min(MaxHealth, CurrentHealth + amount);
 
-            if (CurrentHealth != previousHealth)
-                HealthChanged?.Invoke(CurrentHealth, MaxHealth);
+            int actualHealedAmount = CurrentHealth - previousHealth;
+
+            if (actualHealedAmount <= 0)
+                return;
+
+            Healed?.Invoke(actualHealedAmount);
+            HealthChanged?.Invoke(CurrentHealth, MaxHealth);
         }
 
         public void Kill()

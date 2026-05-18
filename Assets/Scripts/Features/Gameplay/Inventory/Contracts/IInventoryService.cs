@@ -8,6 +8,8 @@ namespace Features.Gameplay.Inventory.Contracts
     public interface IInventoryService
     {
         event Action Changed;
+        
+        event Action<InventoryItemDefinition, int> ItemAdded;
 
         IReadOnlyList<InventorySlotData> Slots { get; }
 

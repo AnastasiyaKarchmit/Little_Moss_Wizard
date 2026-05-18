@@ -11,5 +11,6 @@ namespace Core.UI.Windows.Data
         LoadingScreen,
         BootstrapLoadingScreen,
         Inventory,
+        PickupPopup
     }
 }
