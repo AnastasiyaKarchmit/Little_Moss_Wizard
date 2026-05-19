@@ -1,15 +1,15 @@
 using UnityEngine;
 
-namespace Features.Gameplay.Popups.Data
+namespace Core.UI.Popups.Data
 {
-    public readonly struct GameplayPopupRequest
+    public readonly struct PopupRequest
     {
         public readonly Sprite Icon;
         public readonly string Title;
         public readonly string AmountText;
         public readonly float Duration;
 
-        public GameplayPopupRequest(
+        public PopupRequest(
             Sprite icon,
             string title,
             string amountText,

@@ -623,12 +623,12 @@ TextureImporter:
       name: Mossy - Decorations&Hazards_19
       rect:
         serializedVersion: 2
-        x: 2111
-        y: 63
+        x: 2108
+        y: 68
         width: 416
         height: 1468
-      alignment: 2
-      pivot: {x: 0.5, y: 1}
+      alignment: 9
+      pivot: {x: 0.4999994, y: 0.6176466}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -649,8 +649,8 @@ TextureImporter:
         y: 57
         width: 432
         height: 1476
-      alignment: 2
-      pivot: {x: 0.5, y: 1}
+      alignment: 9
+      pivot: {x: 0.5, y: 0.6176466}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -671,8 +671,8 @@ TextureImporter:
         y: 53
         width: 424
         height: 1484
-      alignment: 2
-      pivot: {x: 0.5, y: 1}
+      alignment: 9
+      pivot: {x: 0.5, y: 0.6176466}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -693,8 +693,8 @@ TextureImporter:
         y: 45
         width: 250
         height: 1506
-      alignment: 2
-      pivot: {x: 0.5, y: 1}
+      alignment: 9
+      pivot: {x: 0.5, y: 0.6176466}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []

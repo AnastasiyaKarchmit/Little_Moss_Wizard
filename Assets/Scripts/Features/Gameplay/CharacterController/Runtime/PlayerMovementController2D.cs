@@ -105,7 +105,7 @@ namespace Features.Gameplay.CharacterController.Runtime
         private void Awake()
         {
             _rigidbody = GetComponent<Rigidbody2D>();
-            _collider = GetComponent<BoxCollider2D>();
+            _collider = GetComponent<Collider2D>();
 
             ConfigureRigidbody();
             BuildCollisionFilter();
