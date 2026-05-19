@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace Core.Save
 {
@@ -22,6 +23,42 @@ namespace Core.Save
     public sealed class GameplayData
     {
         public int LastCompletedLevel;
+        public CheckpointData Checkpoint = new();
+    }
+    
+    [Serializable]
+    public sealed class CheckpointData
+    {
+        public bool HasCheckpoint;
+        public string SceneId;
+        public string CheckpointId;
+
+        public float PositionX;
+        public float PositionY;
+        public float PositionZ;
+
+        public Vector3 GetPosition()
+        {
+            return new Vector3(PositionX, PositionY, PositionZ);
+        }
+
+        public void SetPosition(Vector3 position)
+        {
+            PositionX = position.x;
+            PositionY = position.y;
+            PositionZ = position.z;
+        }
+
+        public void Clear()
+        {
+            HasCheckpoint = false;
+            SceneId = string.Empty;
+            CheckpointId = string.Empty;
+
+            PositionX = 0f;
+            PositionY = 0f;
+            PositionZ = 0f;
+        }
     }
     
     [Serializable]

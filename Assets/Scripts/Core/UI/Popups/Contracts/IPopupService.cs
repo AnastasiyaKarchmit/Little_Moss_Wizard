@@ -1,12 +1,14 @@
 using System;
+using System.Threading;
 using Core.UI.Popups.Data;
+using Cysharp.Threading.Tasks;
 
 namespace Core.UI.Popups.Contracts
 {
     public interface IPopupService
     {
-        event Action<PopupRequest> PopupRequested;
-
-        void Show(PopupRequest request);
+        UniTask<TResult> ShowAsync<TResult>(
+            IPopupRequest<TResult> request,
+            CancellationToken token = default);
     }
 }

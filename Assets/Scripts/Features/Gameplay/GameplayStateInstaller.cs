@@ -1,12 +1,14 @@
+using System.Collections.Generic;
 using Core.AppStates.Components;
+using Core.Save;
 using Features.Gameplay.CharacterController.Configs;
 using Features.Gameplay.CharacterController.Contracts;
 using Features.Gameplay.CharacterController.Runtime;
+using Features.Gameplay.Checkpoints.Runtime;
 using Features.Gameplay.Infrastructure;
 using Features.Gameplay.Infrastructure.States.GameplayState;
 using Features.Gameplay.Infrastructure.States.InventoryState;
 using Features.Gameplay.Infrastructure.States.PauseState;
-using Features.Gameplay.Inventory;
 using Features.Gameplay.Inventory.Contracts;
 using Features.Gameplay.Inventory.Runtime;
 using Features.Shared.SettingsState;
@@ -20,6 +22,7 @@ namespace Features.Gameplay
     {
         [SerializeField] private GameObject player;
         [SerializeField] private PlayerMovementConfig playerMovementConfig;
+        [SerializeField] private PlayerCheckpointRespawnController respawnController;
         public override void RegisterDependencies(IContainerBuilder builder)
         {
             RegisterInventory(builder);
@@ -31,6 +34,7 @@ namespace Features.Gameplay
             builder.Register<GameplayAudioController>(Lifetime.Singleton);
             builder.Register<GameplayAppStateController>(Lifetime.Singleton);
             RegisterPlayer(builder);
+            RegisterCheckpointService(builder);
         }
 
         private void RegisterPlayer(IContainerBuilder builder)
@@ -74,6 +78,20 @@ namespace Features.Gameplay
             
             builder.Register<InventoryPresenter>(Lifetime.Singleton)
                 .AsSelf();
+            
+            builder.RegisterEntryPoint<InventoryPopupHandler>();
+        }
+
+        private void RegisterCheckpointService(IContainerBuilder builder)
+        {
+            builder.Register<CheckpointService>(Lifetime.Singleton)
+                .AsSelf()
+                .As<ISaveDataProvider>();
+            
+            builder.RegisterComponent(respawnController)
+                .AsSelf();
+
+            
         }
     }
 }

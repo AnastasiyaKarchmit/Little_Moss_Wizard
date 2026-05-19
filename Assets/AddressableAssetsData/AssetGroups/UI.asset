@@ -41,7 +41,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8606d85428fc6cc48b7de1f1b10b05a7
-    m_Address: Assets/Prefabs/Gameplay/InventoryWindow.prefab
+    m_Address: InventoryWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cf29c38d733c553469e27ce476c816fe
+    m_Address: ItemAddedPopup
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
