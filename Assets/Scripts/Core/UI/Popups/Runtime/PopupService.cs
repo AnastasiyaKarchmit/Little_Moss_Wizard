@@ -6,6 +6,8 @@ using Core.UI.Popups.Contracts;
 using Core.UI.Popups.Runtime.Handlers;
 using Core.UI.Popups.Runtime.Handlers.Core;
 using Cysharp.Threading.Tasks;
+using VContainer;
+using VContainer.Unity;
 
 namespace Core.UI.Popups.Runtime
 {
@@ -16,10 +18,21 @@ namespace Core.UI.Popups.Runtime
 
         private bool _isDisposed;
 
-        public PopupService(IEnumerable<IPopupHandler> handlers)
+        public IPopupService Parent { get; }
+
+        public PopupService(
+            IEnumerable<IPopupHandler> handlers,
+            LifetimeScope lifetimeScope)
         {
             _handlers = handlers?.ToArray()
                         ?? throw new ArgumentNullException(nameof(handlers));
+
+            if (lifetimeScope != null &&
+                lifetimeScope.Parent != null &&
+                lifetimeScope.Parent.Container.TryResolve(out IPopupService parentPopupService))
+            {
+                Parent = parentPopupService;
+            }
         }
 
         public async UniTask<TResult> ShowAsync<TResult>(
@@ -32,12 +45,21 @@ namespace Core.UI.Popups.Runtime
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
+            IPopupHandler handler = FindLocalHandler(request.GetType());
+
+            if (handler == null)
+            {
+                if (Parent != null)
+                    return await Parent.ShowAsync(request, token);
+
+                throw new InvalidOperationException(
+                    $"No popup handler registered for request type '{request.GetType().Name}'.");
+            }
+
             await _semaphore.WaitAsync(token);
 
             try
             {
-                IPopupHandler handler = FindHandler(request.GetType());
-
                 object result = await handler.HandleAsync(request, token);
 
                 return result is TResult typedResult
@@ -50,24 +72,23 @@ namespace Core.UI.Popups.Runtime
             }
         }
 
-        private IPopupHandler FindHandler(Type requestType)
+        private IPopupHandler FindLocalHandler(Type requestType)
         {
-            IPopupHandler handler = _handlers.FirstOrDefault(x => x.RequestType == requestType);
+            IPopupHandler exactHandler = _handlers
+                .FirstOrDefault(handler => handler.RequestType == requestType);
 
-            if (handler != null)
-                return handler;
+            if (exactHandler != null)
+                return exactHandler;
 
-            handler = _handlers.FirstOrDefault(x => x.RequestType.IsAssignableFrom(requestType));
-
-            if (handler != null)
-                return handler;
-
-            throw new InvalidOperationException(
-                $"No popup handler registered for request type '{requestType.Name}'.");
+            return _handlers.FirstOrDefault(
+                handler => handler.RequestType.IsAssignableFrom(requestType));
         }
 
         public void Dispose()
         {
+            if (_isDisposed)
+                return;
+
             _isDisposed = true;
             _semaphore.Dispose();
         }

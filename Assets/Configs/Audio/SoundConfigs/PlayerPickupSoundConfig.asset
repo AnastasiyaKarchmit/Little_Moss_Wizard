@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: da9aa952fb274f6a8b0aa7313ab46dd5, type: 3}
-  m_Name: PlayerDashSoundConfig
+  m_Name: PlayerPickupSoundConfig
   m_EditorClassIdentifier: Assembly-CSharp::Core.Audio.Configs.SoundConfig
   clips:
-  - {fileID: 8300000, guid: aef2d7c1ab33d394abaec12d09186114, type: 3}
+  - {fileID: 8300000, guid: 524be243420351c4fba6c370f6550cb4, type: 3}
   settings:
     OutputMixerGroup: {fileID: 7184877114515420266, guid: be8904350b9f4e4298ccc74139557a52, type: 2}
     Mute: 0

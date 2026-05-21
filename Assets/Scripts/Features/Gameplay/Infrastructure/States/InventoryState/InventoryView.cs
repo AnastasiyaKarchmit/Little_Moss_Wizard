@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Core.UI.Views;
 using Features.Gameplay.Inventory.Data;
 using Features.Gameplay.Inventory.UI;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Features.Gameplay.Infrastructure.States.InventoryState
@@ -35,6 +37,11 @@ namespace Features.Gameplay.Infrastructure.States.InventoryState
                     OnSlotFocused,
                     OnSlotClicked);
             }
+            
+            var interactableSlot = slots.ToList().Find(x => x.interactable);
+            
+            if (interactableSlot != null)
+                EventSystem.current.SetSelectedGameObject(interactableSlot.gameObject);
         }
 
         public void SetSlots(

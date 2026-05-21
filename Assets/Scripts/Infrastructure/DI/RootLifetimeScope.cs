@@ -143,11 +143,15 @@ namespace Infrastructure.DI
 
         private void RegisterPopups(IContainerBuilder builder)
         {
-            builder.Register<PopupService>(Lifetime.Singleton)
+            builder.Register<PopupService>(Lifetime.Scoped)
                 .As<IPopupService>()
                 .AsSelf();
             
-            builder.Register<TimedPopupHandler>(Lifetime.Singleton)
+            builder.Register<TimedPopupHandler>(Lifetime.Scoped)
+                .As<IPopupHandler>()
+                .AsSelf();;
+            
+            builder.Register<ConfirmationPopupHandler>(Lifetime.Scoped)
                 .As<IPopupHandler>()
                 .AsSelf();;
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using Core.Audio.Contracts;
 using Core.Input.Contracts;
 using Core.Input.Runtime;
 using Core.Patterns.MVP;
@@ -17,6 +18,7 @@ namespace Features.Gameplay.Infrastructure.States.InventoryState
         private readonly IInventoryService _inventoryService;
         private readonly IWindowService _windowService;
         private readonly IInputService _inputService;
+        private readonly IUISoundPlayer _uiSoundPlayer;
 
         private readonly CompositeDisposable _screenDisposables = new();
         private readonly ReactiveCommand<Unit> _closeCommand = new();
@@ -31,11 +33,13 @@ namespace Features.Gameplay.Infrastructure.States.InventoryState
         public InventoryPresenter(
             IInventoryService inventoryService,
             IWindowService windowService,
-            IInputService inputService)
+            IInputService inputService, 
+            IUISoundPlayer uiSoundPlayer)
         {
             _inventoryService = inventoryService ?? throw new ArgumentNullException(nameof(inventoryService));
             _windowService = windowService ?? throw new ArgumentNullException(nameof(windowService));
             _inputService = inputService ?? throw new ArgumentNullException(nameof(inputService));
+            _uiSoundPlayer = uiSoundPlayer ?? throw new ArgumentNullException(nameof(uiSoundPlayer));
         }
 
         public async UniTask EnterAsync(CancellationToken token = default)
@@ -90,7 +94,11 @@ namespace Features.Gameplay.Infrastructure.States.InventoryState
             _inputService.UI.Cancel.Performed
                 .Where(pressed => pressed)
                 .ThrottleFirst(_inputThrottle)
-                .Subscribe(_ => _closeCommand.Execute(Unit.Default))
+                .Subscribe(_ =>
+                {
+                    _uiSoundPlayer.PlayButtonClick();
+                    _closeCommand.Execute(Unit.Default);
+                })
                 .AddTo(_screenDisposables);
         }
         
@@ -105,6 +113,9 @@ namespace Features.Gameplay.Infrastructure.States.InventoryState
             _selectedIndex = index;
 
             bool used = _inventoryService.UseAt(_selectedIndex);
+
+            if (used)
+                _uiSoundPlayer.PlayButtonClick();
 
             ClampSelectedIndex();
             RefreshView();

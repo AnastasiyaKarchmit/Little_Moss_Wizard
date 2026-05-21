@@ -1,10 +1,13 @@
 using System;
 using System.Threading;
+using Core.Audio.Contracts;
+using Core.Settings;
 using Core.UI.Windows.Components;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 namespace Core.UI.Popups.UI
 {
@@ -27,7 +30,7 @@ namespace Core.UI.Popups.UI
         {
             _canvasGroup = GetComponent<CanvasGroup>();
         }
-
+        
         public void SetContent(
             Sprite icon,
             string title,

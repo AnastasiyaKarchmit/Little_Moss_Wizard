@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using Core.Audio.Contracts;
 using Core.Input.Contracts;
 using Core.Input.Runtime;
 using Core.Patterns.MVP;
@@ -19,6 +20,7 @@ namespace Features.Gameplay.Infrastructure.States.GameplayState
         private readonly IWindowService _windowService;
         private readonly IInputService _inputService;
         private readonly IPlayerHealth _playerHealth;
+        private readonly IUISoundPlayer _uiSoundPlayer;
         
         private readonly CompositeDisposable _screenDisposables = new();
         
@@ -37,17 +39,18 @@ namespace Features.Gameplay.Infrastructure.States.GameplayState
             GameplayModel model,
             IWindowService windowService,
             IInputService inputService,
-            IPlayerHealth playerHealth)
+            IPlayerHealth playerHealth,
+            IUISoundPlayer uiSoundPlayer)
         {
             _model = model ?? throw new ArgumentNullException(nameof(model));
             _windowService = windowService ?? throw new ArgumentNullException(nameof(windowService));
             _inputService = inputService ?? throw new ArgumentNullException(nameof(inputService));
             _playerHealth = playerHealth ?? throw new ArgumentNullException(nameof(playerHealth));
+            _uiSoundPlayer = uiSoundPlayer ?? throw new ArgumentNullException(nameof(uiSoundPlayer));
         }
 
         public async UniTask EnterAsync(CancellationToken token = default)
         {
-
             _view = await _windowService.GetOrCreateAsync<GameplayView>(
                 WindowId.GameplayHud,
                 token);
@@ -94,16 +97,24 @@ namespace Features.Gameplay.Infrastructure.States.GameplayState
             _inputService.UI.Cancel.Performed
                 .Where(pressed => pressed)
                 .ThrottleFirst(_inputThrottle)
-                .Subscribe(_ => _pauseCommand.Execute(Unit.Default))
+                .Subscribe(_ =>
+                {
+                    _uiSoundPlayer.PlayButtonClick();
+                    _pauseCommand.Execute(Unit.Default);
+                })
                 .AddTo(_screenDisposables);
             
             _inputService.Gameplay.Inventory.Started
                 .Where(pressed => pressed)
                 .ThrottleFirst(_inputThrottle)
-                .Subscribe(_ => _inventoryCommand.Execute(Unit.Default))
+                .Subscribe(_ =>
+                {
+                    _uiSoundPlayer.PlayButtonClick();
+                    _inventoryCommand.Execute(Unit.Default);
+                })
                 .AddTo(_screenDisposables);
         }
-        
+
         private void SubscribeToHealth()
         {
             if (_isSubscribedToHealth)

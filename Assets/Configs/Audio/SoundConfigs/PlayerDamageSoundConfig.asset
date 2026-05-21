@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PlayerDamageSoundConfig
   m_EditorClassIdentifier: Assembly-CSharp::Core.Audio.Configs.SoundConfig
   clips:
-  - {fileID: 8300000, guid: 0dea2334c05e768499437f688320b97c, type: 3}
+  - {fileID: 8300000, guid: f6623373ff02831408d96eae4033ed1b, type: 3}
   settings:
     OutputMixerGroup: {fileID: 7184877114515420266, guid: be8904350b9f4e4298ccc74139557a52, type: 2}
     Mute: 0
