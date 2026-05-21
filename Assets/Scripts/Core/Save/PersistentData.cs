@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Core.Save
@@ -24,6 +25,31 @@ namespace Core.Save
     {
         public int LastCompletedLevel;
         public CheckpointData Checkpoint = new();
+        public InventoryData Inventory = new();
+        public CollectiblesData Collectibles = new();
+    }
+    
+    [Serializable]
+    public sealed class InventoryData
+    {
+        public const int DefaultCapacity = 6;
+
+        public int Capacity = DefaultCapacity;
+        public List<InventorySlotSaveData> Slots = new();
+    }
+
+    [Serializable]
+    public sealed class InventorySlotSaveData
+    {
+        public int Index;
+        public string ItemId;
+        public int Amount;
+    }
+    
+    [Serializable]
+    public sealed class CollectiblesData
+    {
+        public List<string> CollectedIds = new();
     }
     
     [Serializable]

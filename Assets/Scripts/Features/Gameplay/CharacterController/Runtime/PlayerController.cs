@@ -17,6 +17,7 @@ namespace Features.Gameplay.CharacterController.Runtime
 
         [Header("Gameplay")]
         [SerializeField] private PlayerCollisionController2D collisionController;
+        [SerializeField] private PlayerInteractionController2D interactionController;
 
         public PlayerMovementController2D Movement => movement;
         public PlayerHealth Health => health;
@@ -64,6 +65,9 @@ namespace Features.Gameplay.CharacterController.Runtime
             
             if (boostController != null)
                 boostController.enabled = active;
+            
+            if (interactionController != null)
+                interactionController.enabled = active;
         }
 
         public void EnableGameplay()
@@ -92,6 +96,9 @@ namespace Features.Gameplay.CharacterController.Runtime
             
             if (boostController == null)
                 boostController = GetComponentInChildren<PlayerBoostController>();
+            
+            if (interactionController == null)
+                interactionController = GetComponentInChildren<PlayerInteractionController2D>();
         }
         
         private void OnDamaged(int damageAmount)

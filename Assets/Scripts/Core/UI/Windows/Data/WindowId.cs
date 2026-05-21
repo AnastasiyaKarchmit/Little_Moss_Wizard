@@ -12,6 +12,7 @@ namespace Core.UI.Windows.Data
         BootstrapLoadingScreen,
         Inventory,
         PickupPopup,
-        ConfirmationPopup
+        ConfirmationPopup,
+        MessagePopup
     }
 }

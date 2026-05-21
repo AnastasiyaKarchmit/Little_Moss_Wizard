@@ -30,6 +30,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 358fc4bc79ac62e40bd875e6c90f82e4
+    m_Address: MessagePopup
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4111316c18027fc47915a88ab5ee1162
     m_Address: SettingsView
     m_ReadOnly: 0

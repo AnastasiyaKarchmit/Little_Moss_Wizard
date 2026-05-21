@@ -131,7 +131,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.46125, y: 0.56875}
+    oldSize: {x: 0.46124998, y: 0.56875}
     newSize: {x: 7.38, y: 9.1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -151,6 +151,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30cc81dc689a44a49a11c9958b35f3b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Features.Gameplay.Inventory.Runtime.InventoryItemPickup2D
-  item: {fileID: 11400000, guid: e31031c759c9b974ba761fb75f593081, type: 2}
+  item: {fileID: 11400000, guid: 974807ea15345cc42b191f6ba3b3cfd1, type: 2}
   amount: 1
   destroyAfterPickup: 1

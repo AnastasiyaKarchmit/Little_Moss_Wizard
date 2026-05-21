@@ -40,21 +40,13 @@ namespace Features.Gameplay.Checkpoints.Runtime
                     checkpoint.RegisterCheckpoint(checkpointService);
                 }
             }
+            
+            SpawnAtSavedPoint();
         }
 
         private void Awake()
         {
             ResolveReferences();
-        }
-
-        private async void Start()
-        {
-            if (!spawnOnStart)
-                return;
-
-            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);
-
-            SpawnAtSavedPoint();
         }
 
         private void OnEnable()

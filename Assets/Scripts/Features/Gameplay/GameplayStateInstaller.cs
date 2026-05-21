@@ -5,10 +5,14 @@ using Features.Gameplay.CharacterController.Configs;
 using Features.Gameplay.CharacterController.Contracts;
 using Features.Gameplay.CharacterController.Runtime;
 using Features.Gameplay.Checkpoints.Runtime;
+using Features.Gameplay.Collectibles.Runtime;
 using Features.Gameplay.Infrastructure;
 using Features.Gameplay.Infrastructure.States.GameplayState;
 using Features.Gameplay.Infrastructure.States.InventoryState;
 using Features.Gameplay.Infrastructure.States.PauseState;
+using Features.Gameplay.Interactions.Contracts;
+using Features.Gameplay.Interactions.Runtime;
+using Features.Gameplay.Inventory.Configs;
 using Features.Gameplay.Inventory.Contracts;
 using Features.Gameplay.Inventory.Runtime;
 using Features.Shared.SettingsState;
@@ -23,6 +27,8 @@ namespace Features.Gameplay
         [SerializeField] private GameObject player;
         [SerializeField] private PlayerMovementConfig playerMovementConfig;
         [SerializeField] private PlayerCheckpointRespawnController respawnController;
+        [SerializeField] private InventoryItemDatabase inventoryItemDatabase;
+        [SerializeField] private SceneCollectiblesController collectiblesParent;
         public override void RegisterDependencies(IContainerBuilder builder)
         {
             RegisterInventory(builder);
@@ -35,6 +41,7 @@ namespace Features.Gameplay
             builder.Register<GameplayAppStateController>(Lifetime.Singleton);
             RegisterPlayer(builder);
             RegisterCheckpointService(builder);
+            RegisterCollectibleService(builder);
         }
 
         private void RegisterPlayer(IContainerBuilder builder)
@@ -66,10 +73,18 @@ namespace Features.Gameplay
             builder.RegisterComponent(player.GetComponent<PlayerCollisionController2D>());
 
             builder.RegisterComponent(player.GetComponent<PlayerMovementAnimator2D>());
+
+            builder.Register<PlayerInteractionContext>(Lifetime.Singleton)
+                .As<IPlayerInteractionContext>();
+
+            builder.RegisterComponent(player.GetComponentInChildren<PlayerInteractionController2D>());
         }
 
         private void RegisterInventory(IContainerBuilder builder)
         {
+            builder.RegisterInstance(inventoryItemDatabase)
+                .AsImplementedInterfaces();
+            
             builder.Register<InventoryItemUseContext>(Lifetime.Singleton)
                 .As<IInventoryItemUseContext>();
             
@@ -90,8 +105,15 @@ namespace Features.Gameplay
             
             builder.RegisterComponent(respawnController)
                 .AsSelf();
+        }
 
-            
+        private void RegisterCollectibleService(IContainerBuilder builder)
+        {
+           builder.Register<CollectibleService>(Lifetime.Singleton)
+                .AsSelf()
+                .AsImplementedInterfaces();
+           
+           builder.RegisterComponent(collectiblesParent);
         }
     }
 }

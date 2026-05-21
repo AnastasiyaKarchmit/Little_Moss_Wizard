@@ -1,15 +1,21 @@
 using System;
 using System.Collections.Generic;
+using Core.Save;
+using Cysharp.Threading.Tasks;
 using Features.Gameplay.Inventory.Configs;
 using Features.Gameplay.Inventory.Contracts;
 using Features.Gameplay.Inventory.Data;
 
 namespace Features.Gameplay.Inventory.Runtime
 {
-    public sealed class InventoryService : IInventoryService
+     public sealed class InventoryService : IInventoryService, ISaveDataProvider, IDisposable
     {
         private readonly IInventoryItemUseContext _useContext;
+        private readonly IInventoryItemDatabase _itemDatabase;
+        private readonly ISaveSystem _saveSystem;
         private readonly List<InventorySlotData> _slots;
+
+        private bool _isDisposed;
 
         public event Action Changed;
         public event Action<InventoryItemDefinition, int> ItemAdded;
@@ -17,16 +23,85 @@ namespace Features.Gameplay.Inventory.Runtime
         public IReadOnlyList<InventorySlotData> Slots => _slots;
         public int Capacity => _slots.Count;
 
-        public InventoryService(IInventoryItemUseContext useContext)
+        public InventoryService(
+            IInventoryItemUseContext useContext,
+            IInventoryItemDatabase itemDatabase,
+            ISaveSystem saveSystem)
         {
-            _useContext = useContext;
+            _useContext = useContext ?? throw new ArgumentNullException(nameof(useContext));
+            _itemDatabase = itemDatabase ?? throw new ArgumentNullException(nameof(itemDatabase));
+            _saveSystem = saveSystem ?? throw new ArgumentNullException(nameof(saveSystem));
 
-            const int defaultCapacity = 12;
+            _slots = new List<InventorySlotData>();
 
-            _slots = new List<InventorySlotData>(defaultCapacity);
+            EnsureCapacity(InventoryData.DefaultCapacity);
 
-            for (int i = 0; i < defaultCapacity; i++)
-                _slots.Add(InventorySlotData.Empty);
+            _saveSystem.Register(this);
+        }
+
+        public UniTask LoadAsync(PersistentData data)
+        {
+            InventoryData inventoryData = data?.Gameplay?.Inventory ?? new InventoryData();
+
+            int capacity = inventoryData.Capacity > 0
+                ? inventoryData.Capacity
+                : InventoryData.DefaultCapacity;
+
+            EnsureCapacity(capacity);
+
+            foreach (InventorySlotSaveData savedSlot in inventoryData.Slots)
+            {
+                if (savedSlot == null)
+                    continue;
+
+                if (!IsValidIndex(savedSlot.Index))
+                    continue;
+
+                if (string.IsNullOrWhiteSpace(savedSlot.ItemId))
+                    continue;
+
+                if (savedSlot.Amount <= 0)
+                    continue;
+
+                if (!_itemDatabase.TryGetItem(savedSlot.ItemId, out InventoryItemDefinition item))
+                    continue;
+
+                int amount = Math.Min(savedSlot.Amount, item.MaxStack);
+
+                _slots[savedSlot.Index] = new InventorySlotData(item, amount);
+            }
+
+            Changed?.Invoke();
+
+            return UniTask.CompletedTask;
+        }
+
+        public void Save(PersistentData data)
+        {
+            if (data == null)
+                return;
+
+            data.Gameplay.Inventory ??= new InventoryData();
+
+            InventoryData inventoryData = data.Gameplay.Inventory;
+
+            inventoryData.Capacity = _slots.Count;
+            inventoryData.Slots.Clear();
+
+            for (int i = 0; i < _slots.Count; i++)
+            {
+                InventorySlotData slot = _slots[i];
+
+                if (slot.IsEmpty)
+                    continue;
+
+                inventoryData.Slots.Add(new InventorySlotSaveData
+                {
+                    Index = i,
+                    ItemId = slot.Item.Id,
+                    Amount = slot.Amount
+                });
+            }
         }
 
         public bool AddItem(InventoryItemDefinition item, int amount = 1)
@@ -64,10 +139,9 @@ namespace Features.Gameplay.Inventory.Runtime
 
             slot.Amount -= amount;
 
-            if (slot.Amount <= 0)
-                _slots[index] = InventorySlotData.Empty;
-            else
-                _slots[index] = slot;
+            _slots[index] = slot.Amount <= 0
+                ? InventorySlotData.Empty
+                : slot;
 
             Changed?.Invoke();
 
@@ -99,6 +173,37 @@ namespace Features.Gameplay.Inventory.Runtime
 
             return true;
         }
+        
+        public int GetAmount(InventoryItemDefinition item)
+        {
+            if (item == null)
+                return 0;
+
+            int totalAmount = 0;
+
+            for (int i = 0; i < _slots.Count; i++)
+            {
+                InventorySlotData slot = _slots[i];
+
+                if (slot.IsEmpty)
+                    continue;
+
+                if (!string.Equals(slot.Item.Id, item.Id, StringComparison.Ordinal))
+                    continue;
+
+                totalAmount += slot.Amount;
+            }
+
+            return totalAmount;
+        }
+
+        public bool HasItem(InventoryItemDefinition item, int amount = 1)
+        {
+            if (item == null || amount <= 0)
+                return false;
+
+            return GetAmount(item) >= amount;
+        }
 
         public InventorySlotData GetSlot(int index)
         {
@@ -119,7 +224,7 @@ namespace Features.Gameplay.Inventory.Runtime
                 if (slot.IsEmpty)
                     continue;
 
-                if (slot.Item != item)
+                if (!string.Equals(slot.Item.Id, item.Id, StringComparison.Ordinal))
                     continue;
 
                 if (slot.Amount >= item.MaxStack)
@@ -160,9 +265,29 @@ namespace Features.Gameplay.Inventory.Runtime
             return amount;
         }
 
+        private void EnsureCapacity(int capacity)
+        {
+            capacity = Math.Max(1, capacity);
+
+            _slots.Clear();
+
+            for (int i = 0; i < capacity; i++)
+                _slots.Add(InventorySlotData.Empty);
+        }
+
         private bool IsValidIndex(int index)
         {
             return index >= 0 && index < _slots.Count;
+        }
+
+        public void Dispose()
+        {
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
+
+            _saveSystem.Unregister(this);
         }
     }
 }

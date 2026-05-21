@@ -1,4 +1,5 @@
 using Features.Gameplay.Inventory.Contracts;
+using UnityEditor;
 using UnityEngine;
 
 namespace Features.Gameplay.Inventory.Configs
@@ -9,7 +10,8 @@ namespace Features.Gameplay.Inventory.Configs
     public sealed class InventoryItemDefinition : ScriptableObject
     {
         [Header("Identity")]
-        [SerializeField] private string id;
+        [SerializeField, HideInInspector] private string id;
+        
         [SerializeField] private string displayName;
         [SerializeField, TextArea] private string description;
 
@@ -24,7 +26,7 @@ namespace Features.Gameplay.Inventory.Configs
         [SerializeField] private bool consumeOnUse = true;
         [SerializeField] private InventoryItemUseAction useAction;
 
-        public string Id => string.IsNullOrWhiteSpace(id) ? name : id;
+        public string Id => id;
         public string DisplayName => displayName;
         public string Description => description;
         public Sprite Icon => icon;
@@ -52,6 +54,27 @@ namespace Features.Gameplay.Inventory.Configs
                 maxStack = 1;
 
             maxStack = Mathf.Max(1, maxStack);
+
+            AssignStableAssetId();
+        }
+
+        private void AssignStableAssetId()
+        {
+            string path = AssetDatabase.GetAssetPath(this);
+
+            if (string.IsNullOrWhiteSpace(path))
+                return;
+
+            string assetGuid = AssetDatabase.AssetPathToGUID(path);
+
+            if (string.IsNullOrWhiteSpace(assetGuid))
+                return;
+
+            if (id == assetGuid)
+                return;
+
+            id = assetGuid;
+            EditorUtility.SetDirty(this);
         }
 #endif
     }

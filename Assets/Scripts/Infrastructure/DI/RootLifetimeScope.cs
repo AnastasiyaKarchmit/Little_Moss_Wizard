@@ -154,6 +154,10 @@ namespace Infrastructure.DI
             builder.Register<ConfirmationPopupHandler>(Lifetime.Scoped)
                 .As<IPopupHandler>()
                 .AsSelf();;
+            
+            builder.Register<MessagePopupHandler>(Lifetime.Scoped)
+                .As<IPopupHandler>()
+                .AsSelf();
         }
         
     }

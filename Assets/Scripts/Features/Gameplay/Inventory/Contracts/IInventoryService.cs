@@ -18,6 +18,9 @@ namespace Features.Gameplay.Inventory.Contracts
         bool AddItem(InventoryItemDefinition item, int amount = 1);
         bool RemoveAt(int index, int amount = 1);
         bool UseAt(int index);
+        
+        int GetAmount(InventoryItemDefinition item);
+        bool HasItem(InventoryItemDefinition item, int amount = 1);
 
         InventorySlotData GetSlot(int index);
     }
