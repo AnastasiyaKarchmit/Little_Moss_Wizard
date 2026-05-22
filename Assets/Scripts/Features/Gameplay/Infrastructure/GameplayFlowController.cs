@@ -176,8 +176,12 @@ namespace Features.Gameplay.Infrastructure
                     AwaitOperation.Drop)
                 .AddTo(_disposables);
             
+            _gameplayPresenter.GameCompleted
+                .Subscribe(_ => RequestBackToMenu())
+                .AddTo(_disposables);
+
             _pausePresenter.BackToMenuRequested
-                .Subscribe(_ => _backToMenuRequested.Execute(Unit.Default))
+                .Subscribe(_ => RequestBackToMenu())
                 .AddTo(_disposables);
 
             _settingsPresenter.BackRequested
@@ -236,6 +240,11 @@ namespace Features.Gameplay.Infrastructure
             {
                 _isTransitioning = false;
             }
+        }
+        
+        private void RequestBackToMenu()
+        {
+            _backToMenuRequested.Execute(Unit.Default);
         }
         
         public void Dispose()

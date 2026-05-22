@@ -14,7 +14,7 @@ namespace Features.Gameplay.CharacterController.Runtime
     [DisallowMultipleComponent]
     public sealed class PlayerInteractionController2D : MonoBehaviour
     {
-        private IPlayerInteractionContext _context;
+        private IEndgameInteractionContext _context;
         private IInputService _inputService;
         private IInventoryService _inventoryService;
         private IPopupService _popupService;
@@ -30,7 +30,7 @@ namespace Features.Gameplay.CharacterController.Runtime
             IInputService inputService,
             IInventoryService inventoryService,
             IPopupService popupService,
-            IPlayerInteractionContext context)
+            IEndgameInteractionContext context)
         {
             _inputService = inputService ?? throw new ArgumentNullException(nameof(inputService));
             _inventoryService = inventoryService ?? throw new ArgumentNullException(nameof(inventoryService));

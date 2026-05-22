@@ -7,6 +7,7 @@ using Core.Patterns.MVP;
 using Core.UI.Windows.Contracts;
 using Core.UI.Windows.Data;
 using Cysharp.Threading.Tasks;
+using Features.Gameplay.CharacterController.Runtime;
 using Features.Gameplay.Inventory.Contracts;
 using R3;
 using UnityEngine;
@@ -19,6 +20,7 @@ namespace Features.Gameplay.Infrastructure.States.InventoryState
         private readonly IWindowService _windowService;
         private readonly IInputService _inputService;
         private readonly IUISoundPlayer _uiSoundPlayer;
+        private readonly PlayerController _playerController;
 
         private readonly CompositeDisposable _screenDisposables = new();
         private readonly ReactiveCommand<Unit> _closeCommand = new();
@@ -34,16 +36,20 @@ namespace Features.Gameplay.Infrastructure.States.InventoryState
             IInventoryService inventoryService,
             IWindowService windowService,
             IInputService inputService, 
-            IUISoundPlayer uiSoundPlayer)
+            IUISoundPlayer uiSoundPlayer,
+            PlayerController playerController)
         {
             _inventoryService = inventoryService ?? throw new ArgumentNullException(nameof(inventoryService));
             _windowService = windowService ?? throw new ArgumentNullException(nameof(windowService));
             _inputService = inputService ?? throw new ArgumentNullException(nameof(inputService));
             _uiSoundPlayer = uiSoundPlayer ?? throw new ArgumentNullException(nameof(uiSoundPlayer));
+            _playerController = playerController ?? throw new ArgumentNullException(nameof(playerController));
         }
 
         public async UniTask EnterAsync(CancellationToken token = default)
         {
+            _playerController.DisableGameplay();
+            
             _view = await _windowService.GetOrCreateAsync<InventoryView>(
                 WindowId.Inventory,
                 token);

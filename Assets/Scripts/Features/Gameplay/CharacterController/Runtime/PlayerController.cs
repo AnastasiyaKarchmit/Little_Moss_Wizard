@@ -19,29 +19,20 @@ namespace Features.Gameplay.CharacterController.Runtime
         [SerializeField] private PlayerCollisionController2D collisionController;
         [SerializeField] private PlayerInteractionController2D interactionController;
 
-        public PlayerMovementController2D Movement => movement;
-        public PlayerHealth Health => health;
-
         private bool _isGameplayActive = true;
 
         private void Awake()
         {
             ResolveReferences();
 
-            if (health != null)
-            {
+            if (health != null) 
                 health.Died += OnDied;
-                health.Damaged += OnDamaged;
-            }
         }
         
         private void OnDestroy()
         {
-            if (health != null)
-            {
+            if (health != null) 
                 health.Died -= OnDied;
-                health.Damaged -= OnDamaged;
-            }
         }
 
         public void SetGameplayActive(bool active)
@@ -99,12 +90,6 @@ namespace Features.Gameplay.CharacterController.Runtime
             
             if (interactionController == null)
                 interactionController = GetComponentInChildren<PlayerInteractionController2D>();
-        }
-        
-        private void OnDamaged(int damageAmount)
-        {
-            if (audioController != null)
-                audioController.PlayHit();
         }
         
         private void OnDied()

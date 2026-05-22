@@ -8,7 +8,7 @@ namespace Features.Gameplay.Interactions.Contracts
         bool CanInteract { get; }
 
         UniTask InteractAsync(
-            IPlayerInteractionContext context,
+            IEndgameInteractionContext context,
             CancellationToken token = default);
     }
 }

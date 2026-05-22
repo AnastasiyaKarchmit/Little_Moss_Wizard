@@ -1,3 +1,4 @@
+using System;
 using Core.Save;
 using Cysharp.Threading.Tasks;
 using Features.Gameplay.CharacterController.Contracts;
@@ -11,7 +12,7 @@ using VContainer;
 namespace Features.Gameplay.CharacterController.Runtime
 {
     [DisallowMultipleComponent]
-    public sealed class PlayerCollisionController2D : MonoBehaviour
+    public sealed class PlayerCollisionController2D : MonoBehaviour, IPlayerItemCollectionEvents
     {
         [Header("References")]
         [SerializeField] private PlayerController player;
@@ -23,6 +24,8 @@ namespace Features.Gameplay.CharacterController.Runtime
         private IInventoryService _inventoryService;
         private ICollectibleService _collectibleService;
         private ISaveSystem _saveSystem;
+        
+        public event Action ItemCollected;
 
         [Inject]
         public void Construct(
@@ -82,9 +85,16 @@ namespace Features.Gameplay.CharacterController.Runtime
 
             _collectibleService.MarkCollected(collectible.Id);
             collectible.ApplyCollectedState();
+            
+            NotifyItemCollected();
 
             if (saveImmediatelyAfterCollect)
                 _saveSystem.SaveAsync().Forget();
+        }
+        
+        private void NotifyItemCollected()
+        {
+            ItemCollected?.Invoke();
         }
 
         private void TryHandleDamageSource(Collider2D other)

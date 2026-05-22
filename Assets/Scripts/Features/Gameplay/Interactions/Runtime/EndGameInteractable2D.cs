@@ -48,7 +48,7 @@ namespace Features.Gameplay.Interactions.Runtime
         }
 
         public async UniTask InteractAsync(
-            IPlayerInteractionContext context,
+            IEndgameInteractionContext context,
             CancellationToken token = default)
         {
             if (!CanInteract)
@@ -70,12 +70,18 @@ namespace Features.Gameplay.Interactions.Runtime
 
             _completed = true;
 
+            Time.timeScale = 0;
+            
             await context.PopupService.ShowAsync(
                 new MessagePopupRequest(
                     successTitle,
                     successMessage,
                     "Finish"),
                 token);
+            
+            Time.timeScale = 1;
+            
+            context.GameplayCompletionService.Complete();
 
             if (disableAfterSuccessfulInteraction)
                 gameObject.SetActive(false);

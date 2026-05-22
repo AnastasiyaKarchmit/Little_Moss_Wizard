@@ -79,9 +79,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: -1033155525
-  m_SortingLayer: 3
-  m_SortingOrder: 0
+  m_SortingLayerID: 1471997865
+  m_SortingLayer: 5
+  m_SortingOrder: -1
   m_MaskInteraction: 0
   m_Sprite: {fileID: -8581876271254444398, guid: d810a647701b7d9429a25b93cadf2e46, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -105,9 +105,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30cc81dc689a44a49a11c9958b35f3b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Features.Gameplay.Inventory.Runtime.InventoryItemPickup2D
+  id: 837de9e69b70f2740b97ba18ff3ef03a
   item: {fileID: 11400000, guid: fbea1abd04e9f4c44a37ff01327b3a90, type: 2}
   amount: 1
-  destroyAfterPickup: 1
+  deactivateWhenCollected: 1
+  collidersToDisable:
+  - {fileID: 5832377612861832081}
+  renderersToDisable:
+  - {fileID: 3236045857004889760}
 --- !u!61 &5832377612861832081
 BoxCollider2D:
   m_ObjectHideFlags: 0

@@ -70,12 +70,14 @@ namespace Features.Gameplay
                 .AsSelf()
                 .As<IPlayerBoostController>();
 
-            builder.RegisterComponent(player.GetComponent<PlayerCollisionController2D>());
+            builder.RegisterComponent(player.GetComponent<PlayerCollisionController2D>())
+                .AsImplementedInterfaces()
+                .AsSelf();
 
             builder.RegisterComponent(player.GetComponent<PlayerMovementAnimator2D>());
 
-            builder.Register<PlayerInteractionContext>(Lifetime.Singleton)
-                .As<IPlayerInteractionContext>();
+            builder.Register<EndgamePlayerInteractionContext>(Lifetime.Singleton)
+                .As<IEndgameInteractionContext>();
 
             builder.RegisterComponent(player.GetComponentInChildren<PlayerInteractionController2D>());
         }

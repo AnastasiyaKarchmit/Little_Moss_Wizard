@@ -7,6 +7,7 @@ using Core.Patterns.MVP;
 using Core.UI.Windows.Contracts;
 using Core.UI.Windows.Data;
 using Cysharp.Threading.Tasks;
+using Features.Gameplay.CharacterController.Runtime;
 using R3;
 using UnityEngine;
 
@@ -18,6 +19,7 @@ namespace Features.Gameplay.Infrastructure.States.PauseState
         private readonly IWindowService _windowService;
         private readonly IInputService _inputService;
         private readonly IUISoundPlayer _uiSoundPlayer;
+        private readonly PlayerController _playerController;
 
         // Commands used by the View / input.
         private readonly ReactiveCommand<Unit> _resumeClickedCommand = new();
@@ -44,12 +46,14 @@ namespace Features.Gameplay.Infrastructure.States.PauseState
             GameplayModel model,
             IWindowService windowService,
             IInputService inputService,
-            IUISoundPlayer uiSoundPlayer)
+            IUISoundPlayer uiSoundPlayer,
+            PlayerController playerController)
         {
             _model = model ?? throw new ArgumentNullException(nameof(model));
             _windowService = windowService ?? throw new ArgumentNullException(nameof(windowService));
             _inputService = inputService ?? throw new ArgumentNullException(nameof(inputService));
             _uiSoundPlayer = uiSoundPlayer ?? throw new ArgumentNullException(nameof(uiSoundPlayer));
+            _playerController = playerController ?? throw new ArgumentNullException(nameof(playerController));
 
             SubscribeToClickCommands();
         }
@@ -58,6 +62,8 @@ namespace Features.Gameplay.Infrastructure.States.PauseState
         {
             _inputService.SetMode(InputMode.Disabled);
             Time.timeScale = 0f;
+            
+            _playerController.DisableGameplay();
 
             _view = await _windowService.GetOrCreateAsync<PauseView>(
                 WindowId.Pause,

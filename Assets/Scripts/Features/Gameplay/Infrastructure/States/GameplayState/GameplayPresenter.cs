@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Core.Audio.Contracts;
+using Core.GameplayCompletionService;
 using Core.Input.Contracts;
 using Core.Input.Runtime;
 using Core.Patterns.MVP;
@@ -8,6 +9,7 @@ using Core.UI.Windows.Contracts;
 using Core.UI.Windows.Data;
 using Cysharp.Threading.Tasks;
 using Features.Gameplay.CharacterController.Contracts;
+using Features.Gameplay.CharacterController.Runtime;
 using Features.Gameplay.Inventory;
 using R3;
 using UnityEngine;
@@ -21,11 +23,14 @@ namespace Features.Gameplay.Infrastructure.States.GameplayState
         private readonly IInputService _inputService;
         private readonly IPlayerHealth _playerHealth;
         private readonly IUISoundPlayer _uiSoundPlayer;
+        private readonly PlayerController _playerController;
+        private readonly IGameplayCompletionService _gameplayCompletionService;
         
         private readonly CompositeDisposable _screenDisposables = new();
         
         private readonly ReactiveCommand<Unit> _pauseCommand = new();
         private readonly ReactiveCommand<Unit> _inventoryCommand = new();
+        private readonly ReactiveCommand<Unit> _gameCompletedCommand = new();
         
         private readonly TimeSpan _inputThrottle = TimeSpan.FromMilliseconds(300);
         
@@ -34,23 +39,30 @@ namespace Features.Gameplay.Infrastructure.States.GameplayState
         
         public Observable<Unit> PauseRequested => _pauseCommand;
         public Observable<Unit> InventoryRequested => _inventoryCommand;
+        public Observable<Unit> GameCompleted => _gameCompletedCommand;
         
         public GameplayPresenter(
             GameplayModel model,
             IWindowService windowService,
             IInputService inputService,
             IPlayerHealth playerHealth,
-            IUISoundPlayer uiSoundPlayer)
+            IUISoundPlayer uiSoundPlayer,
+            PlayerController playerController,
+            IGameplayCompletionService gameplayCompletionService)
         {
             _model = model ?? throw new ArgumentNullException(nameof(model));
             _windowService = windowService ?? throw new ArgumentNullException(nameof(windowService));
             _inputService = inputService ?? throw new ArgumentNullException(nameof(inputService));
             _playerHealth = playerHealth ?? throw new ArgumentNullException(nameof(playerHealth));
             _uiSoundPlayer = uiSoundPlayer ?? throw new ArgumentNullException(nameof(uiSoundPlayer));
+            _playerController = playerController ?? throw new ArgumentNullException(nameof(playerController));
+            _gameplayCompletionService = gameplayCompletionService ?? throw new ArgumentNullException(nameof(gameplayCompletionService));
         }
 
         public async UniTask EnterAsync(CancellationToken token = default)
         {
+            _playerController.DisableGameplay();
+            
             _view = await _windowService.GetOrCreateAsync<GameplayView>(
                 WindowId.GameplayHud,
                 token);
@@ -65,8 +77,11 @@ namespace Features.Gameplay.Infrastructure.States.GameplayState
 
             SubscribeToInput();
             SubscribeToHealth();
+            SubscribeToGameCompletion();
             
             _inputService.SetMode(InputMode.Gameplay);
+            
+            _playerController.EnableGameplay();
             
             Time.timeScale = 1;
         }
@@ -126,6 +141,20 @@ namespace Features.Gameplay.Infrastructure.States.GameplayState
 
             _isSubscribedToHealth = true;
         }
+        
+        private void SubscribeToGameCompletion()
+        {
+            _gameplayCompletionService.Completed
+                .Subscribe(_ =>
+                {
+                    _inputService.SetMode(InputMode.Disabled);
+                    _playerController.DisableGameplay();
+                    Time.timeScale = 1f;
+
+                    _gameCompletedCommand.Execute(Unit.Default);
+                })
+                .AddTo(_screenDisposables);
+        }
 
         private void UnsubscribeFromHealth()
         {
@@ -166,6 +195,7 @@ namespace Features.Gameplay.Infrastructure.States.GameplayState
             
             _pauseCommand.Dispose();
             _inventoryCommand.Dispose();
+            _gameCompletedCommand.Dispose();
         }
     }
 }

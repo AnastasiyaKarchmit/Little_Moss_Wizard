@@ -5,6 +5,7 @@ using Core.AppStates.Runtime;
 using Core.Audio.Configs;
 using Core.Audio.Contracts;
 using Core.Audio.Runtime;
+using Core.GameplayCompletionService;
 using Core.Input.Runtime;
 using Core.Save;
 using Core.Save.JSON;
@@ -21,6 +22,7 @@ using Core.UI.Popups.Runtime.Handlers;
 using Core.UI.Popups.Runtime.Handlers.Core;
 using Core.UI.Windows.Config;
 using Core.UI.Windows.Runtime;
+using Features.Gameplay.Infrastructure;
 using Infrastructure.Factories;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -49,6 +51,8 @@ namespace Infrastructure.DI
             RegisterServices(builder);
             RegisterSaveSystem(builder);
             RegisterPopups(builder);
+            builder.Register<GameplayCompletionService>(Lifetime.Singleton)
+                .As<IGameplayCompletionService>();
         }
 
         private void RegisterSceneManagement(IContainerBuilder builder)

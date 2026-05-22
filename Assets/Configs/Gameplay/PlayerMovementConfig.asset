@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Features.Gameplay.CharacterController.Configs.PlayerMovementConfig
   PlayerLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 576
   SolidLayers:
     serializedVersion: 2
     m_Bits: 384
@@ -46,5 +46,5 @@ MonoBehaviour:
   DashCooldown: 0.18
   DashBuffer: 0.12
   AirDashes: 1
-  AllowVerticalDash: 1
+  AllowVerticalDash: 0
   DashEndSpeedMultiplier: 0.55

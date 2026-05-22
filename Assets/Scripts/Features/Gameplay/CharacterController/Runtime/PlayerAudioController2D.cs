@@ -1,5 +1,6 @@
 using Core.Audio.Configs;
 using Core.Audio.Contracts;
+using Features.Gameplay.CharacterController.Contracts;
 using UnityEngine;
 using VContainer;
 
@@ -11,7 +12,6 @@ namespace Features.Gameplay.CharacterController.Runtime
         private const int InvalidAudioId = 0;
 
         [Header("References")]
-        [SerializeField] private PlayerMovementController2D movement;
         [SerializeField] private Transform audioOrigin;
 
         [Header("Landing")]
@@ -32,8 +32,13 @@ namespace Features.Gameplay.CharacterController.Runtime
 
         private IAudioService _audioService;
         private IAudioDatabase _audioDatabase;
+        private IPlayerMovementController _movementController;
+        private IPlayerHealth _playerHealth;
+        private IPlayerItemCollectionEvents _playerItemCollectionEvents;
 
         private float _nextFootstepTime;
+
+        private bool _isSubscribed;
 
         private SoundConfig JumpSound => _audioDatabase?.Gameplay.PlayerJump;
 
@@ -45,41 +50,66 @@ namespace Features.Gameplay.CharacterController.Runtime
 
         private SoundConfig HitSound => _audioDatabase?.Gameplay.PlayerHit;
 
+        private SoundConfig ItemCollected => _audioDatabase?.Gameplay.PickupItem;
+
         [Inject]
         public void Construct(
             IAudioService audioService,
-            IAudioDatabase audioDatabase)
+            IAudioDatabase audioDatabase,
+            IPlayerMovementController movementController,
+            IPlayerHealth playerHealth,
+            IPlayerItemCollectionEvents playerItemCollectionEvents)
         {
             _audioService = audioService;
             _audioDatabase = audioDatabase;
-        }
-
-        private void Awake()
-        {
-            ResolveReferences();
+            _movementController = movementController;
+            _playerHealth = playerHealth;
+            _playerItemCollectionEvents = playerItemCollectionEvents;
+            
+            SubscribeToEvents();
         }
 
         private void OnEnable()
         {
-            if (movement == null)
-                ResolveReferences();
-
-            if (movement == null)
+            if (_movementController == null 
+                || _playerItemCollectionEvents == null
+                || _playerHealth == null)
                 return;
+            
+            SubscribeToEvents();
+        }
 
-            movement.Jumped += OnJumped;
-            movement.Dashed += OnDashed;
-            movement.GroundedChanged += OnGroundedChanged;
+        private void SubscribeToEvents()
+        {
+            if (_isSubscribed)
+                return;
+            
+            _isSubscribed = true;
+            
+            _movementController.Jumped += OnJumped;
+            _movementController.Dashed += OnDashed;
+            _movementController.GroundedChanged += OnGroundedChanged;
+            _playerItemCollectionEvents.ItemCollected += OnItemCollected;
+            _playerHealth.Damaged += PlayHit;
         }
 
         private void OnDisable()
         {
-            if (movement == null)
+            if (_movementController == null)
                 return;
 
-            movement.Jumped -= OnJumped;
-            movement.Dashed -= OnDashed;
-            movement.GroundedChanged -= OnGroundedChanged;
+            UnsubscribeFromEvents();
+        }
+
+        private void UnsubscribeFromEvents()
+        {
+            _movementController.Jumped -= OnJumped;
+            _movementController.Dashed -= OnDashed;
+            _movementController.GroundedChanged -= OnGroundedChanged;
+            _playerItemCollectionEvents.ItemCollected += OnItemCollected;
+            _playerHealth.Damaged -= PlayHit;
+            
+            _isSubscribed = false;
         }
 
         private void Update()
@@ -92,22 +122,22 @@ namespace Features.Gameplay.CharacterController.Runtime
 
         public void PlayFootstep()
         {
-            if (movement == null)
+            if (_movementController == null)
                 return;
 
-            if (!movement.Grounded)
+            if (!_movementController.Grounded)
                 return;
 
-            if (movement.IsDashing)
+            if (_movementController.IsDashing)
                 return;
 
-            if (Mathf.Abs(movement.Velocity.x) < minFootstepSpeed)
+            if (Mathf.Abs(_movementController.Velocity.x) < minFootstepSpeed)
                 return;
 
             PlayAtPlayer(FootstepSound);
         }
 
-        public void PlayHit()
+        public void PlayHit(int damage)
         {
             PlayAtPlayer(HitSound);
         }
@@ -122,6 +152,10 @@ namespace Features.Gameplay.CharacterController.Runtime
             PlayAtPlayer(DashSound);
         }
 
+        private void OnItemCollected()
+        {
+            PlayAtPlayer(ItemCollected);
+        }
         private void OnGroundedChanged(bool grounded, float impactVelocity)
         {
             if (!grounded)
@@ -142,13 +176,13 @@ namespace Features.Gameplay.CharacterController.Runtime
 
         private void TryPlayAutomaticFootstep()
         {
-            if (movement == null)
+            if (_movementController == null)
                 return;
 
-            if (!movement.Grounded || movement.IsDashing)
+            if (!_movementController.Grounded || _movementController.IsDashing)
                 return;
 
-            float speed = Mathf.Abs(movement.Velocity.x);
+            float speed = Mathf.Abs(_movementController.Velocity.x);
 
             if (speed < minFootstepSpeed)
                 return;
@@ -190,20 +224,9 @@ namespace Features.Gameplay.CharacterController.Runtime
             return id;
         }
 
-        private void ResolveReferences()
-        {
-            if (movement == null)
-                movement = GetComponentInParent<PlayerMovementController2D>();
-
-            if (audioOrigin == null)
-                audioOrigin = transform;
-        }
-
 #if UNITY_EDITOR
         private void OnValidate()
         {
-            ResolveReferences();
-
             hardLandingImpact = Mathf.Max(
                 hardLandingImpact,
                 minLandingImpactToPlay + 0.01f);

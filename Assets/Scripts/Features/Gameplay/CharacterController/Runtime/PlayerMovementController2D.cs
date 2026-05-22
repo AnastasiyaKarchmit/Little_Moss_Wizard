@@ -12,6 +12,10 @@ namespace Features.Gameplay.CharacterController.Runtime
     [RequireComponent(typeof(Collider2D))]
     public sealed class PlayerMovementController2D : MonoBehaviour, IPlayerMovementController
     {
+        [Header("Dash Collision Protection")]
+        [SerializeField, Min(0.001f)] private float dashWallCheckSkin = 0.08f;
+        [SerializeField, Range(-1f, 0f)] private float dashWallNormalDotThreshold = -0.2f;
+        
         private PlayerMovementConfig _config;
         private IPlayerBoostController _boostController;
 
@@ -21,7 +25,7 @@ namespace Features.Gameplay.CharacterController.Runtime
         private IPlayerMovementInputSource _inputSource;
 
         private ContactFilter2D _solidFilter;
-        private readonly RaycastHit2D[] _castHits = new RaycastHit2D[8];
+        private readonly RaycastHit2D[] _castHits = new RaycastHit2D[16];
 
         private PlayerMovementInputFrame _input;
         private Vector2 _velocity;
@@ -213,7 +217,8 @@ namespace Features.Gameplay.CharacterController.Runtime
         private void StopMovement()
         {
             _velocity = Vector2.zero;
-            ApplyMovement();
+            _externalVelocity = Vector2.zero;
+            SetBodyVelocity(Vector2.zero);
         }
 
         private void ConfigureRigidbody()
@@ -221,6 +226,7 @@ namespace Features.Gameplay.CharacterController.Runtime
             _rigidbody.gravityScale = 0f;
             _rigidbody.freezeRotation = true;
             _rigidbody.interpolation = RigidbodyInterpolation2D.Interpolate;
+            _rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         }
 
         private void BuildCollisionFilter()
@@ -477,6 +483,12 @@ namespace Features.Gameplay.CharacterController.Runtime
                     return false;
                 }
 
+                if (IsDashBlockedThisFrame())
+                {
+                    EndDashAgainstWall();
+                    return false;
+                }
+
                 _velocity = _dashDirection * _config.DashSpeed;
                 return true;
             }
@@ -492,8 +504,7 @@ namespace Features.Gameplay.CharacterController.Runtime
             if (!CanStartDash())
                 return false;
 
-            StartDash();
-            return true;
+            return TryStartDash();
         }
 
         private bool CanStartDash()
@@ -507,16 +518,24 @@ namespace Features.Gameplay.CharacterController.Runtime
             return cooldownReady && hasDashAvailable;
         }
 
-        private void StartDash()
+        private bool TryStartDash()
         {
             _dashBuffered = false;
+
+            Vector2 dashDirection = GetDashDirection();
+
+            if (IsDashBlocked(dashDirection))
+            {
+                _velocity.x = 0f;
+                return false;
+            }
 
             _isDashing = true;
 
             _dashStartedTime = _time;
             _lastDashStartedTime = _time;
 
-            _dashDirection = GetDashDirection();
+            _dashDirection = dashDirection;
 
             if (!_grounded)
                 _airDashesUsed++;
@@ -526,6 +545,8 @@ namespace Features.Gameplay.CharacterController.Runtime
             _velocity = _dashDirection * _config.DashSpeed;
 
             Dashed?.Invoke(_dashDirection);
+
+            return true;
         }
 
         private void EndDash()
@@ -552,6 +573,60 @@ namespace Features.Gameplay.CharacterController.Runtime
                 direction.x = direction.x >= 0f ? 1f : -1f;
 
             return direction.normalized;
+        }
+        
+        private bool IsDashBlockedThisFrame()
+        {
+            return IsDashBlocked(_dashDirection);
+        }
+
+        private bool IsDashBlocked(Vector2 dashDirection)
+        {
+            if (dashDirection.sqrMagnitude <= 0.0001f)
+                return false;
+
+            float checkDistance =
+                _config.DashSpeed * Time.fixedDeltaTime + dashWallCheckSkin;
+
+            int hitCount = _collider.Cast(
+                dashDirection,
+                _solidFilter,
+                _castHits,
+                checkDistance,
+                true);
+
+            for (int i = 0; i < hitCount; i++)
+            {
+                RaycastHit2D hit = _castHits[i];
+
+                if (hit.collider == null)
+                    continue;
+
+                if (hit.collider == _collider)
+                    continue;
+
+                if (hit.collider.isTrigger)
+                    continue;
+
+                float directionIntoSurface = Vector2.Dot(dashDirection, hit.normal);
+
+                if (directionIntoSurface <= dashWallNormalDotThreshold)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private void EndDashAgainstWall()
+        {
+            _isDashing = false;
+
+            _velocity = Vector2.zero;
+            _externalVelocity = Vector2.zero;
+
+            SetBodyVelocity(Vector2.zero);
+
+            DashEnded?.Invoke();
         }
 
         // --------------------------------------------------------------------
