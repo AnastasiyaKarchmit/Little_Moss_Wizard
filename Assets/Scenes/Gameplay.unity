@@ -61563,8 +61563,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4958799155867421385, guid: 9f456e9faf5c63a4e8b917f33d45ba26, type: 3}
       propertyPath: m_text
-      value: Press Shift to dash forward. Use it to cross gaps, dodge danger, and
-        move quickly through the cave.
+      value: Press <sprite=71> to dash forward. Use it to cross gaps, dodge danger,
+        and move quickly through the cave.
       objectReference: {fileID: 0}
     - target: {fileID: 4958799155867421385, guid: 9f456e9faf5c63a4e8b917f33d45ba26, type: 3}
       propertyPath: m_fontAsset
@@ -61657,8 +61657,8 @@ MonoBehaviour:
   titleText: {fileID: 865284637}
   descriptionText: {fileID: 865284636}
   title: Dash
-  description: Press Shift to dash forward. Use it to cross gaps, dodge danger, and
-    move quickly through the cave.
+  description: Press <sprite=71> to dash forward. Use it to cross gaps, dodge danger,
+    and move quickly through the cave.
   showOnStart: 0
   fadeDuration: 0.25
   usePunchScale: 1
@@ -62453,8 +62453,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4958799155867421385, guid: 9f456e9faf5c63a4e8b917f33d45ba26, type: 3}
       propertyPath: m_text
-      value: Use A and D to move left and right. Press Space to jump and hold it
-        longer to jump higher.
+      value: Use <sprite=298> and <sprite=188> to move left and right. Press <sprite=70>
+        to jump and hold it longer to jump higher.
       objectReference: {fileID: 0}
     - target: {fileID: 4958799155867421385, guid: 9f456e9faf5c63a4e8b917f33d45ba26, type: 3}
       propertyPath: m_fontAsset
@@ -62547,8 +62547,8 @@ MonoBehaviour:
   titleText: {fileID: 1020876160}
   descriptionText: {fileID: 1020876159}
   title: Movement
-  description: Use A and D to move left and right. Press Space to jump and hold it
-    longer to jump higher.
+  description: Use <sprite=298> and <sprite=188> to move left and right. Press <sprite=70>
+    to jump and hold it longer to jump higher.
   showOnStart: 1
   fadeDuration: 0.25
   usePunchScale: 1
@@ -142247,9 +142247,9 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4958799155867421385, guid: 9f456e9faf5c63a4e8b917f33d45ba26, type: 3}
       propertyPath: m_text
-      value: Bring the required ingredients to the potion altar and press E to interact.
-        If you have collected both ingredients, you can complete the final potion
-        and finish the game.
+      value: Bring the required ingredients to the potion altar and press <sprite=192>
+        to interact. If you have collected both ingredients, you can complete the
+        final potion and finish the game.
       objectReference: {fileID: 0}
     - target: {fileID: 4958799155867421385, guid: 9f456e9faf5c63a4e8b917f33d45ba26, type: 3}
       propertyPath: m_fontAsset
@@ -142342,8 +142342,8 @@ MonoBehaviour:
   titleText: {fileID: 1812836668}
   descriptionText: {fileID: 1812836667}
   title: Final Potion
-  description: Bring the required ingredients to the potion altar and press E to
-    interact. If you have collected both ingredients, you can complete the final
+  description: Bring the required ingredients to the potion altar and press <sprite=192>
+    to interact. If you have collected both ingredients, you can complete the final
     potion and finish the game.
   showOnStart: 0
   fadeDuration: 0.25
@@ -147694,9 +147694,9 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4958799155867421385, guid: 9f456e9faf5c63a4e8b917f33d45ba26, type: 3}
       propertyPath: m_text
-      value: Collect glowing items throughout the cave. Some items are ingredients
-        needed to finish the game, while others can be used as potions. Press Tab
-        to open your inventory and click an item to use it.
+      value: Collect items throughout the cave. Potions can be used to heal or boost
+        the abilities. Press <sprite=53> to open your inventory and click an item
+        or press <sprite=196> to use it.
       objectReference: {fileID: 0}
     - target: {fileID: 4958799155867421385, guid: 9f456e9faf5c63a4e8b917f33d45ba26, type: 3}
       propertyPath: m_fontAsset
@@ -147789,9 +147789,9 @@ MonoBehaviour:
   titleText: {fileID: 2012137502}
   descriptionText: {fileID: 2012137501}
   title: Collectibles & Inventory
-  description: Collect glowing items throughout the cave. Some items are ingredients
-    needed to finish the game, while others can be used as potions. Press Tab to
-    open your inventory and click an item to use it.
+  description: Collect glowing items throughout the cave. Potions can be used to
+    heal or boost the abilities. Press <sprite=53> to open your inventory and click
+    an item or press <sprite=196> to use it.
   showOnStart: 0
   fadeDuration: 0.25
   usePunchScale: 1
