@@ -1,6 +1,7 @@
 using System;
 using Features.Gameplay.CharacterController.Contracts;
 using UnityEngine;
+using VContainer;
 
 namespace Features.Gameplay.CharacterController.Runtime
 {
@@ -8,8 +9,11 @@ namespace Features.Gameplay.CharacterController.Runtime
     public sealed class PlayerBoostController : MonoBehaviour, IPlayerBoostController
     {
         private const float DefaultJumpMultiplier = 1f;
+        
+        private IPlayerHealth _playerHealth;
 
         private float _jumpBoostEndTime;
+        private bool _subscribed;
 
         public event Action JumpBoostChanged;
         public event Action JumpBoostApplied;
@@ -29,6 +33,17 @@ namespace Features.Gameplay.CharacterController.Runtime
                 return Mathf.Max(0f, _jumpBoostEndTime - Time.time);
             }
         }
+        
+        [Inject]
+        public void Construct(IPlayerHealth playerHealth)
+        {
+            _playerHealth = playerHealth;
+            SubscribeToEvents();
+        }
+        
+        private void OnEnable() => SubscribeToEvents();
+        
+        private void OnDisable() => UnsubscribeFromEvents();
 
         private void Update()
         {
@@ -66,6 +81,24 @@ namespace Features.Gameplay.CharacterController.Runtime
 
             JumpBoostCleared?.Invoke();
             JumpBoostChanged?.Invoke();
+        }
+
+        private void SubscribeToEvents()
+        {
+            if (_subscribed || _playerHealth == null)
+                return;
+
+            _subscribed = true;
+            _playerHealth.Died += ClearJumpBoost;
+        }
+
+        private void UnsubscribeFromEvents()
+        {
+            if (_playerHealth == null)
+                return;
+            
+            _playerHealth.Died  -= ClearJumpBoost;
+           _subscribed = false;
         }
     }
 }

@@ -95,11 +95,6 @@ namespace Features.Gameplay.CharacterController.Runtime
         private void OnDied()
         {
             DisableGameplay();
-
-            // Later:
-            // play death animation
-            // show respawn screen
-            // notify gameplay state
         }
 
 #if UNITY_EDITOR

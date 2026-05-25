@@ -35,7 +35,7 @@ MonoBehaviour:
   JumpStartVelocityMultiplier: 0.677
   JumpSustainTime: 0.093
   JumpCutVelocityMultiplier: 0.45
-  GravityOnReleaseMultiplier: 2.2
+  GravityOnReleaseMultiplier: 2
   FallGravityMultiplier: 2.2
   MinJumpCutTime: 0.035
   CoyoteTime: 0.12

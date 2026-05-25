@@ -5,7 +5,6 @@ using System.Threading;
 using Core.UI.Windows.Contracts;
 using Core.UI.Windows.Data;
 using Cysharp.Threading.Tasks;
-using Infrastructure.DI;
 using VContainer;
 using VContainer.Unity;
 

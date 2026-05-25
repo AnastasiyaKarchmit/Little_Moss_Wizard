@@ -1,10 +1,10 @@
 using System;
 using Core.Input.Contracts;
 using R3;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
+using VContainer.Unity;
 
 namespace Core.Input.Runtime
 {
