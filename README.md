@@ -25,7 +25,6 @@ The architecture is centered around a main application state machine that contro
 - Bootstrap
 - Main Menu
 - Gameplay
-- Loading / transition flow
 
 Each app state is responsible for its own setup, dependencies, lifetime, and cleanup.
 
