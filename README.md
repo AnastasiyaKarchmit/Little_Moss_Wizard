@@ -154,11 +154,11 @@ World-space hints are used to explain mechanics directly inside the level.
 
 The project was created to demonstrate practical Unity development skills, including:
 
+- reusable Unity architecture design
 - 2D character controller development
-- gameplay system architecture
-- interaction systems
-- inventory and collectible systems
-- UI/popup flow
+- modular gameplay system implementation
+- interaction, inventory, and collectible systems
+- Addressables-based UI/window flow
 - scene and app-state management
 - dependency injection in Unity
 - clean and maintainable C# code
