@@ -10,6 +10,7 @@ using Core.UI.Windows.Contracts;
 using Core.UI.Windows.Data;
 using Cysharp.Threading.Tasks;
 using R3;
+using UnityEngine;
 
 namespace Features.MainMenu.States.MainMenuState
 {
@@ -24,15 +25,17 @@ namespace Features.MainMenu.States.MainMenuState
         private readonly ReactiveCommand<Unit> _playClickedCommand = new();
         private readonly ReactiveCommand<Unit> _playRequestedCommand = new();
         private readonly ReactiveCommand<Unit> _settingsCommand = new();
-        private readonly ReactiveCommand<Unit> _quitCommand = new();
+        private readonly ReactiveCommand<Unit> _quitClickedCommand = new();
+        private readonly ReactiveCommand<Unit> _quitRequestedCommand = new();
         private readonly CompositeDisposable _disposables = new();
 
         private MainMenuView _view;
         private bool _isHandlingPlayClick;
+        private bool _isHandlingQuitClick;
 
         public Observable<Unit> PlayRequested => _playRequestedCommand;
         public Observable<Unit> SettingsRequested => _settingsCommand;
-        public Observable<Unit> QuitRequested => _quitCommand;
+        public Observable<Unit> QuitRequested => _quitRequestedCommand;
 
         public MainMenuPresenter(
             MainMenuModel model,
@@ -59,7 +62,7 @@ namespace Features.MainMenu.States.MainMenuState
 
             token.ThrowIfCancellationRequested();
 
-            _view.Initialize(_playClickedCommand, _settingsCommand);
+            _view.Initialize(_playClickedCommand, _settingsCommand, _quitClickedCommand);
 
             await _view.ShowAsync();
         }
@@ -96,8 +99,12 @@ namespace Features.MainMenu.States.MainMenuState
                 .Subscribe(_ => _uiSoundPlayer.PlayButtonClick())
                 .AddTo(_disposables);
             
-            _quitCommand
-                .Subscribe(_ => _uiSoundPlayer.PlayButtonClick())
+            _quitClickedCommand
+                .Subscribe(_ =>
+                {
+                    _uiSoundPlayer.PlayButtonClick();
+                    HandleQuitClickedAsync().Forget();
+                })
                 .AddTo(_disposables);
         }
         
@@ -135,13 +142,32 @@ namespace Features.MainMenu.States.MainMenuState
                 _isHandlingPlayClick = false;
             }
         }
+
+        private async UniTask HandleQuitClickedAsync()
+        {
+            if (_isHandlingQuitClick)
+                return;
+            
+            _isHandlingQuitClick = true;
+
+            try
+            {
+                await _model.SaveBeforeQuit();
+                
+                _quitRequestedCommand.Execute(Unit.Default);
+            }
+            finally
+            {
+               _isHandlingQuitClick = false;
+            }
+        }
         
         public void Dispose()
         {
             _playClickedCommand.Dispose();
             _playRequestedCommand.Dispose();
             _settingsCommand.Dispose();
-            _quitCommand.Dispose();
+            _quitRequestedCommand.Dispose();
             _disposables.Dispose();
         }
     }

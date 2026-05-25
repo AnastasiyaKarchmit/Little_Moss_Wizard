@@ -1800,6 +1800,7 @@ MonoBehaviour:
   fadeOutDuration: 0.2
   playButton: {fileID: 3740585608989012695}
   settingsButton: {fileID: 5060257847612462210}
+  quitButton: {fileID: 6167838223257776983}
   titleText: {fileID: 140863877703306578}
 --- !u!225 &8981698022365271510
 CanvasGroup:

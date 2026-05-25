@@ -1,9 +1,11 @@
+#if UNITY_EDITOR
 using Core.UI.Animations;
 using UnityEditor;
 using UnityEditor.UI;
 
 namespace Core.UI.Editor
 {
+
     [CustomEditor(typeof(AnimatedSlider), true)]
     [CanEditMultipleObjects]
     public class AnimatedSliderEditor : SliderEditor
@@ -38,3 +40,4 @@ namespace Core.UI.Editor
         }
     }
 }
+#endif

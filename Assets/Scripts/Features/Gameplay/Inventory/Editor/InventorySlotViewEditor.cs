@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using Features.Gameplay.Inventory.UI;
 using UnityEditor;
 using UnityEditor.UI;
@@ -49,3 +50,4 @@ namespace Features.Gameplay.Inventory.Editor
         }
     }
 }
+#endif

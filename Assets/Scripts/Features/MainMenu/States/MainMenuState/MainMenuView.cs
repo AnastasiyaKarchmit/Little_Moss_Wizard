@@ -12,6 +12,7 @@ namespace Features.MainMenu.States.MainMenuState
     {
         [SerializeField] private Button playButton;
         [SerializeField] private Button settingsButton;
+        [SerializeField] private Button quitButton;
         [SerializeField] private TMP_Text titleText;
 
         private readonly CompositeDisposable _disposables = new();
@@ -19,7 +20,8 @@ namespace Features.MainMenu.States.MainMenuState
 
         public void Initialize(
             ReactiveCommand<Unit> playCommand,
-            ReactiveCommand<Unit> settingsCommand)
+            ReactiveCommand<Unit> settingsCommand,
+            ReactiveCommand<Unit> quitCommand)
         {
             _disposables.Clear();
 
@@ -43,6 +45,16 @@ namespace Features.MainMenu.States.MainMenuState
                         handler => settingsButton.onClick.RemoveListener(handler.Invoke))
                     .ThrottleFirst(_buttonThrottle)
                     .Subscribe(_ => settingsCommand.Execute(Unit.Default))
+                    .AddTo(_disposables);
+            }
+            
+            if (quitButton != null)
+            {
+                Observable.FromEvent(
+                        handler => quitButton.onClick.AddListener(handler.Invoke),
+                        handler => quitButton.onClick.RemoveListener(handler.Invoke))
+                    .ThrottleFirst(_buttonThrottle)
+                    .Subscribe(_ => quitCommand.Execute(Unit.Default))
                     .AddTo(_disposables);
             }
         }

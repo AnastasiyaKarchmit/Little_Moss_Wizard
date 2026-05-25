@@ -51,6 +51,11 @@ namespace Features.MainMenu
             return _saveSystem.ResetAsync();
         }
 
+        public async UniTask SaveBeforeQuit()
+        {
+            await _saveSystem.SaveAsync();
+        }
+
         public void Dispose()
         {
         }
